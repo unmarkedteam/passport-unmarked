@@ -367,37 +367,55 @@ function PassportTab({user, points, vendorStamps, soloCompleted, votes, uploads,
               {/* Upload section */}
               {!isDone && (
                 <div style={S.uploadSection}>
-                  {uploaded
-                    ? (
+                  {/* Step 1: no photo yet — show upload button */}
+                  {!uploaded && (
+                    <label style={S.uploadLabel}>
+                      <input
+                        type="file" accept="image/*" style={{display:"none"}}
+                        onChange={e=>{
+                          const file = e.target.files[0];
+                          if(!file) return;
+                          const reader = new FileReader();
+                          reader.onload = ev => onSolo({...task, uploadData: ev.target.result});
+                          reader.readAsDataURL(file);
+                        }}
+                      />
+                      <span style={S.uploadIcon}>📎</span>
+                      <span>TAP TO UPLOAD PHOTO</span>
+                    </label>
+                  )}
+                  {/* Step 2: photo uploaded — show preview + reupload + staff verify */}
+                  {uploaded && (
+                    <div>
                       <div style={S.uploadPreviewWrap}>
                         <img src={uploaded} alt="upload" style={S.uploadPreview}/>
                         <div style={S.uploadPreviewActions}>
                           <div style={S.uploadPreviewTick}>✓ Photo uploaded</div>
-                          <button style={S.uploadConfirmBtn} onClick={()=>onSolo(task)}>
-                            GET STAMPED →
-                          </button>
+                          {/* Allow re-upload */}
+                          <label style={{...S.uploadLabel, padding:"6px 10px", marginBottom:8, cursor:"pointer"}}>
+                            <input
+                              type="file" accept="image/*" style={{display:"none"}}
+                              onChange={e=>{
+                                const file = e.target.files[0];
+                                if(!file) return;
+                                const reader = new FileReader();
+                                reader.onload = ev => onSolo({...task, uploadData: ev.target.result});
+                                reader.readAsDataURL(file);
+                              }}
+                            />
+                            <span style={{fontSize:11,color:DIM,fontFamily:"'Courier New',monospace",letterSpacing:"0.1em"}}>↺ CHANGE PHOTO</span>
+                          </label>
                         </div>
                       </div>
-                    ) : (
-                      <label style={S.uploadLabel}>
-                        <input
-                          type="file" accept="image/*" style={{display:"none"}}
-                          onChange={e=>{
-                            const file = e.target.files[0];
-                            if(!file) return;
-                            const reader = new FileReader();
-                            reader.onload = ev => onSolo({...task, uploadData: ev.target.result});
-                            reader.readAsDataURL(file);
-                          }}
-                        />
-                        <span style={S.uploadIcon}>📎</span>
-                        <span>TAP TO UPLOAD PHOTO</span>
-                      </label>
-                    )
-                  }
+                      {/* Staff verify button — separate step */}
+                      <button style={S.uploadConfirmBtn} onClick={()=>onSolo(task)}>
+                        UNMARKED STAFF — VERIFY & STAMP →
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
-              {/* Show uploaded image even when done */}
+              {/* Show uploaded image when done */}
               {isDone && uploaded && (
                 <div style={{padding:"8px 0 0"}}>
                   <img src={uploaded} alt="upload" style={{...S.uploadPreview, opacity:0.6}}/>
