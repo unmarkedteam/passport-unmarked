@@ -200,6 +200,7 @@ function BottomNav({tab, setTab}) {
       {[
         {id:"passport",    label:"PASSPORT",    icon:"📋"},
         {id:"leaderboard", label:"LEADERBOARD", icon:"🏆"},
+        {id:"explore",     label:"EXPLORE",     icon:"🔍"},
       ].map(t=>(
         <button key={t.id} style={{...S.navBtn,...(tab===t.id?S.navBtnActive:{})}} onClick={()=>setTab(t.id)}>
           <span style={S.navIcon}>{t.icon}</span>
@@ -740,6 +741,112 @@ function DrawScreen({user, points, onBack}) {
   );
 }
 
+
+// ─── EXPLORE TAB ──────────────────────────────────────────────────────────────
+const EXPLORE_ITEMS = [
+  {
+    id:"spotlight",
+    icon:"🏆",
+    tag:"UNMARKED SPOTLIGHT",
+    title:"Best Builds of the Show",
+    desc:"We highlight some of the best builds in the show, interview the owners and get the insights on what it really took to build a show-worthy car.",
+    color:"#C8FF00",
+    badge:"FEATURED",
+  },
+  {
+    id:"shannons",
+    icon:"🏁",
+    tag:"SHANNONS INSURANCE",
+    title:"Sim Racing",
+    desc:"Jump behind the wheel and experience the thrill of sim racing at the Shannons booth. While you're there, get an insurance quote for your pride and joy.",
+    color:"#FF6B00",
+    badge:"ACTIVITY",
+  },
+  {
+    id:"lumix",
+    icon:"📸",
+    tag:"LUMIX × LAAG MEDIA",
+    title:"Creator Session",
+    desc:"Join the LUMIX x LAAG Media Creator Session at 1PM and 4PM. Learn how to shoot content like a pro and rent a LUMIX camera for the day.",
+    color:"#3399FF",
+    badge:"1PM & 4PM",
+  },
+  {
+    id:"artdeshine",
+    icon:"✨",
+    tag:"ARTDESHINE",
+    title:"Sim Racing",
+    desc:"Get behind the wheel at the Artdeshine simulator and experience racing at its finest. Check out their range of car care products while you're there.",
+    color:"#B06EFF",
+    badge:"ACTIVITY",
+  },
+  {
+    id:"emptystudio",
+    icon:"👜",
+    tag:"EMPTY STUDIOS",
+    title:"Custom Tote Bag",
+    desc:"Design and create your very own customisable tote bag with Empty Studios. Take home a one-of-a-kind piece from the event.",
+    color:"#C8FF00",
+    badge:"CREATE",
+  },
+  {
+    id:"arcade",
+    icon:"🎮",
+    tag:"UNMARKED ARCADE",
+    title:"Daytona USA Racing",
+    desc:"Step up and race on the classic Daytona USA arcade machine. Challenge your mates and see who's fastest on the track.",
+    color:"#FFD700",
+    badge:"ARCADE",
+  },
+  {
+    id:"carnival",
+    icon:"🎯",
+    tag:"CARNIVAL GAMES",
+    title:"Test Your Luck",
+    desc:"Take a shot at the carnival games and see what you're made of. Win prizes and have a laugh with your crew.",
+    color:"#FF4D6D",
+    badge:"GAMES",
+  },
+  {
+    id:"happycap",
+    icon:"🎩",
+    tag:"HAPPY CAP STUDIOS",
+    title:"Create A Memory",
+    desc:"Capture the day with Happy Cap Studios. Take home a physical photo print as your memory of Unmarked — something to keep forever.",
+    color:"#FF85A1",
+    badge:"MEMORY",
+  },
+];
+
+function ExploreTab() {
+  return (
+    <div style={{...S.screen, paddingBottom:120}}>
+      <TopBar title="EXPLORE"/>
+      <div style={S.exploreHero}>
+        <div style={S.exploreHeroEye}>WHAT'S ON</div>
+        <div style={S.exploreHeroTitle}>EXPERIENCE<br/>UNMARKED</div>
+        <div style={S.exploreHeroSub}>Activities, sessions and experiences at this year's show</div>
+      </div>
+      <div style={S.exploreList}>
+        {EXPLORE_ITEMS.map(item => (
+          <div key={item.id} style={S.exploreCard}>
+            <div style={{...S.exploreCardAccent, background: item.color}}/>
+            <div style={S.exploreCardInner}>
+              <div style={S.exploreCardTop}>
+                <div style={S.exploreCardIcon}>{item.icon}</div>
+                <div style={{...S.exploreBadge, color: item.color, borderColor: item.color}}>{item.badge}</div>
+              </div>
+              <div style={S.exploreCardTag}>{item.tag}</div>
+              <div style={S.exploreCardTitle}>{item.title}</div>
+              <div style={S.exploreCardDesc}>{item.desc}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [screen,setScreen]             = useState("splash");
@@ -883,6 +990,7 @@ export default function App() {
     <div style={{position:"relative",minHeight:"100vh",background:BG}}>
       {tab==="passport"   && <PassportTab user={user} points={points} vendorStamps={vendorStamps} soloCompleted={soloCompleted} votes={votes} uploads={uploads} onCat={openCat} onSolo={openSoloPin} onSaveUpload={saveUpload} onSubmitDraw={()=>{setDrawDone(true);setScreen("draw");}} drawSubmitted={drawDone} onClaimPrizes={()=>setScreen("claimPrizes")}/>}
       {tab==="leaderboard" && <LeaderboardTab currentUser={{...user,id:userId}} currentPoints={points} leaderboard={leaderboard}/>}
+      {tab==="explore"     && <ExploreTab/>}
       <BottomNav tab={tab} setTab={setTab}/>
     </div>
   );
@@ -1076,4 +1184,20 @@ const S = {
   successTotal:{fontSize:12,color:DIM,marginBottom:32,fontFamily:MONO},
   drawNote:{color:DIM,fontSize:13,lineHeight:1.8,marginBottom:32,maxWidth:300},
   closeBtn:{marginTop:8,background:"transparent",border:`2px solid ${WHITE}`,color:WHITE,padding:"16px 48px",fontSize:16,fontWeight:900,letterSpacing:"0.2em",cursor:"pointer",fontFamily:BLACK},
+
+  // Explore
+  exploreHero:{background:CARD,borderBottom:`1px solid ${EDGE}`,padding:"28px 20px 24px"},
+  exploreHeroEye:{fontSize:10,letterSpacing:"0.35em",color:ACCENT,fontFamily:MONO,marginBottom:8},
+  exploreHeroTitle:{fontSize:"clamp(32px,9vw,48px)",fontWeight:900,color:WHITE,fontFamily:BLACK,letterSpacing:"-0.03em",lineHeight:1.05,marginBottom:10},
+  exploreHeroSub:{fontSize:13,color:DIM,fontFamily:MONO,lineHeight:1.6},
+  exploreList:{padding:"16px 16px 0",display:"flex",flexDirection:"column",gap:12},
+  exploreCard:{background:CARD,border:`1px solid ${EDGE}`,overflow:"hidden",display:"flex"},
+  exploreCardAccent:{width:4,flexShrink:0},
+  exploreCardInner:{flex:1,padding:"16px 14px"},
+  exploreCardTop:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8},
+  exploreCardIcon:{fontSize:24},
+  exploreBadge:{fontSize:9,fontWeight:700,letterSpacing:"0.25em",fontFamily:MONO,border:"1px solid",padding:"3px 8px"},
+  exploreCardTag:{fontSize:10,color:DIM,letterSpacing:"0.2em",fontFamily:MONO,marginBottom:4},
+  exploreCardTitle:{fontSize:18,fontWeight:900,color:WHITE,fontFamily:BLACK,letterSpacing:"-0.01em",marginBottom:6},
+  exploreCardDesc:{fontSize:12,color:DIM,lineHeight:1.6,fontFamily:MONO},
 };
