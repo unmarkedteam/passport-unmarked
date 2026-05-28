@@ -991,7 +991,8 @@ export default function App() {
       const bytes = new Uint8Array(binary.length);
       for(let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
       const blob = new Blob([bytes], { type: "image/jpeg" });
-      const filename = `${userId || "anon"}_${taskId}_${Date.now()}.jpg`;
+      const day = new Date().getDay() === 6 ? "saturday" : "sunday";
+      const filename = `${day}_${userId || "anon"}_${taskId}_${Date.now()}.jpg`;
       const { data, error } = await supabase.storage
         .from("passport-uploads")
         .upload(filename, blob, { upsert: true });
