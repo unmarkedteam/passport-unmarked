@@ -980,9 +980,29 @@ export default function App() {
     setActivePin({label:vendor.name,icon:cat.icon,pin:vendor.pin,earnedPts:vendor.points,targetId:vendor.id,type:"vendor"});
     setScreen("pin");
   };
-  // Just save the photo — never opens PIN
-  const saveUpload = (taskId, dataUrl) => {
+  // Upload photo to Supabase Storage — never opens PIN
+  const saveUpload = async (taskId, dataUrl) => {
+    // Immediately show preview in UI using dataUrl
     setUploads(u => ({...u, [taskId]: dataUrl}));
+    // Upload to Supabase Storage in background
+    try {
+      const base64 = dataUrl.split(",")[1];
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for(let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const blob = new Blob([bytes], { type: "image/jpeg" });
+      const filename = `${userId || "anon"}_${taskId}_${Date.now()}.jpg`;
+      const { data, error } = await supabase.storage
+        .from("passport-uploads")
+        .upload(filename, blob, { upsert: true });
+      if(!error) {
+        const { data: urlData } = supabase.storage
+          .from("passport-uploads")
+          .getPublicUrl(filename);
+        // Store the public URL instead of base64
+        setUploads(u => ({...u, [taskId]: urlData.publicUrl}));
+      }
+    } catch(e) { console.error("Upload failed", e); }
   };
 
   // Open PIN screen — only called when staff verify button is tapped
