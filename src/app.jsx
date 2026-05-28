@@ -268,7 +268,7 @@ function RegisterScreen({onRegister}) {
 }
 
 // ─── PASSPORT TAB ─────────────────────────────────────────────────────────────
-function PassportTab({user, points, vendorStamps, soloCompleted, votes, uploads, onCat, onSolo, onSubmitDraw, drawSubmitted, onClaimPrizes}) {
+function PassportTab({user, points, vendorStamps, soloCompleted, votes, uploads, onCat, onSolo, onSaveUpload, onSubmitDraw, drawSubmitted, onClaimPrizes}) {
   const done      = totalDone(vendorStamps, soloCompleted);
   const eligible  = done >= REQUIRED;
   const progress  = Math.min(done/REQUIRED, 1);
@@ -376,7 +376,7 @@ function PassportTab({user, points, vendorStamps, soloCompleted, votes, uploads,
                           const file = e.target.files[0];
                           if(!file) return;
                           const reader = new FileReader();
-                          reader.onload = ev => onSolo({...task, uploadData: ev.target.result});
+                          reader.onload = ev => onSaveUpload(task.id, ev.target.result);
                           reader.readAsDataURL(file);
                         }}
                       />
@@ -384,22 +384,21 @@ function PassportTab({user, points, vendorStamps, soloCompleted, votes, uploads,
                       <span>TAP TO UPLOAD PHOTO</span>
                     </label>
                   )}
-                  {/* Step 2: photo uploaded — show preview + reupload + staff verify */}
+                  {/* Step 2: photo uploaded — show preview + change + staff verify */}
                   {uploaded && (
                     <div>
                       <div style={S.uploadPreviewWrap}>
                         <img src={uploaded} alt="upload" style={S.uploadPreview}/>
                         <div style={S.uploadPreviewActions}>
                           <div style={S.uploadPreviewTick}>✓ Photo uploaded</div>
-                          {/* Allow re-upload */}
-                          <label style={{...S.uploadLabel, padding:"6px 10px", marginBottom:8, cursor:"pointer"}}>
+                          <label style={{cursor:"pointer"}}>
                             <input
                               type="file" accept="image/*" style={{display:"none"}}
                               onChange={e=>{
                                 const file = e.target.files[0];
                                 if(!file) return;
                                 const reader = new FileReader();
-                                reader.onload = ev => onSolo({...task, uploadData: ev.target.result});
+                                reader.onload = ev => onSaveUpload(task.id, ev.target.result);
                                 reader.readAsDataURL(file);
                               }}
                             />
@@ -407,7 +406,6 @@ function PassportTab({user, points, vendorStamps, soloCompleted, votes, uploads,
                           </label>
                         </div>
                       </div>
-                      {/* Staff verify button — separate step */}
                       <button style={S.uploadConfirmBtn} onClick={()=>onSolo(task)}>
                         UNMARKED STAFF — VERIFY & STAMP →
                       </button>
@@ -819,21 +817,14 @@ export default function App() {
     setActivePin({label:vendor.name,icon:cat.icon,pin:vendor.pin,earnedPts:vendor.points,targetId:vendor.id,type:"vendor"});
     setScreen("pin");
   };
+  // Just save the photo — never opens PIN
+  const saveUpload = (taskId, dataUrl) => {
+    setUploads(u => ({...u, [taskId]: dataUrl}));
+  };
+
+  // Open PIN screen — only called when staff verify button is tapped
   const openSoloPin = task => {
-    // If task has upload and we received uploadData, store it then open pin
-    if(task.hasUpload && task.uploadData) {
-      setUploads(u => ({...u, [task.id]: task.uploadData}));
-      setActivePin({label:task.label,icon:task.icon,pin:task.pin,earnedPts:task.points,targetId:task.id,type:"solo"});
-      setScreen("pin");
-      return;
-    }
-    // If task has upload and "GET STAMPED" pressed (uploadData already stored)
-    if(task.hasUpload && !task.uploadData) {
-      setActivePin({label:task.label,icon:task.icon,pin:task.pin,earnedPts:task.points,targetId:task.id,type:"solo"});
-      setScreen("pin");
-      return;
-    }
-    setActivePin({label:task.label,icon:task.icon,pin:task.pin,earnedPts:task.points,targetId:task.id,type:"solo",hasvote:task.hasvote});
+    setActivePin({label:task.label,icon:task.icon,pin:task.pin,earnedPts:task.points,targetId:task.id,type:"solo"});
     setScreen("pin");
   };
   const pinSuccess = voteData => {
@@ -861,7 +852,7 @@ export default function App() {
 
   if(screen==="main") return (
     <div style={{position:"relative",minHeight:"100vh",background:BG}}>
-      {tab==="passport"   && <PassportTab user={user} points={points} vendorStamps={vendorStamps} soloCompleted={soloCompleted} votes={votes} uploads={uploads} onCat={openCat} onSolo={openSoloPin} onSubmitDraw={()=>{setDrawDone(true);setScreen("draw");}} drawSubmitted={drawDone} onClaimPrizes={()=>setScreen("claimPrizes")}/>}
+      {tab==="passport"   && <PassportTab user={user} points={points} vendorStamps={vendorStamps} soloCompleted={soloCompleted} votes={votes} uploads={uploads} onCat={openCat} onSolo={openSoloPin} onSaveUpload={saveUpload} onSubmitDraw={()=>{setDrawDone(true);setScreen("draw");}} drawSubmitted={drawDone} onClaimPrizes={()=>setScreen("claimPrizes")}/>}
       {tab==="leaderboard" && <LeaderboardTab currentUser={{...user,id:userId}} currentPoints={points} leaderboard={leaderboard}/>}
       <BottomNav tab={tab} setTab={setTab}/>
     </div>
