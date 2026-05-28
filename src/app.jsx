@@ -742,7 +742,7 @@ export default function App() {
   const [screen,setScreen]             = useState("splash");
   const [tab,setTab]                   = useState("passport");
   const [user,setUser]                 = useState(null);
-  const [userId]                       = useState(()=>`u_${Date.now()}_${Math.random().toString(36).slice(2,7)}`);
+  const [userId,setUserId]             = useState(null);
   const [vendorStamps,setStamps]       = useState({});
   const [soloCompleted,setSolo]        = useState([]);
   const [votes,setVotes]               = useState({});
@@ -761,13 +761,35 @@ export default function App() {
 
   // ── Supabase: save registration ──────────────────────────────────────────
   const saveRegistration = useCallback(async (userData) => {
+    // Use phone as stable unique ID
+    const uid = userData.phone.replace(/\s+/g, "");
+    setUserId(uid);
+
+    // Check if they already have progress saved
     try {
-      await supabase.from("registrations").insert({
-        name: userData.name,
+      const { data: existing } = await supabase
+        .from("entries")
+        .select("*")
+        .eq("id", uid)
+        .single();
+
+      if (existing) {
+        // Restore their session
+        setStamps(existing.vendor_stamps || {});
+        setSolo(existing.solo_completed || []);
+        setDrawDone(existing.draw_submitted || false);
+        setRedeemed(existing.redeemed_points || 0);
+      }
+    } catch(e) { /* no existing entry, fresh start */ }
+
+    // Save registration (upsert so repeat logins don't error)
+    try {
+      await supabase.from("registrations").upsert({
         phone: userData.phone,
-        email: userData.email,
+        name: userData.name,
+        email: userData.email || null,
         instagram: userData.instagram || null,
-      });
+      }, { onConflict: "phone" });
     } catch(e) { console.error("Registration save failed", e); }
   }, []);
 
@@ -798,7 +820,7 @@ export default function App() {
 
   // ── Supabase: push own entry when points change ───────────────────────────
   useEffect(() => {
-    if(!user || points === 0) return;
+    if(!user || !userId || points === 0) return;
     supabase.from("entries").upsert({
       id: userId,
       name: user.name,
