@@ -850,7 +850,7 @@ export default function App() {
 
   // ── Screens ───────────────────────────────────────────────────────────────
   if(screen==="splash")      return <SplashScreen onEnter={()=>setScreen("register")}/>;
-  if(screen==="register")    return <RegisterScreen onRegister={u=>{setUser(u);setScreen("main");}}/>;
+  if(screen==="register")    return <RegisterScreen onRegister={u=>{setUser(u);saveRegistration(u);setScreen("main");}}/>;
 
   if(screen==="main") return (
     <div style={{position:"relative",minHeight:"100vh",background:BG}}>
