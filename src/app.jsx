@@ -779,6 +779,7 @@ export default function App() {
         setSolo(existing.solo_completed || []);
         setDrawDone(existing.draw_submitted || false);
         setRedeemed(existing.redeemed_points || 0);
+        setUploads(existing.uploads || {});
       }
     } catch(e) { /* no existing entry, fresh start */ }
 
@@ -831,9 +832,10 @@ export default function App() {
       draw_submitted: drawDone,
       prize_label: getPrize(points)?.label || null,
       redeemed_points: redeemedPts,
+      uploads: uploads,
       updated_at: new Date().toISOString(),
     }).then(({ error }) => { if(error) console.error("Entry save failed", error); });
-  }, [user, points, drawDone, userId, vendorStamps, soloCompleted, redeemedPts]);
+  }, [user, points, drawDone, userId, vendorStamps, soloCompleted, redeemedPts, uploads]);
 
   // ── Navigation helpers ────────────────────────────────────────────────────
   const openCat       = cat          => { setActiveCat(cat); setScreen("category"); };
