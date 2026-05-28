@@ -1019,11 +1019,28 @@ export default function App() {
     setLast({label:activePin.label,icon:activePin.icon,earnedPts:activePin.earnedPts});
     setScreen("success");
   };
-  const claimSuccess = () => {
-    // Deduct prize points
+  const claimSuccess = async () => {
     const prize = getPrize(points);
-    if(prize) setRedeemed(r => r + prize.pts);
-    setLast({prizeMode:true, prize: getPrize(points)});
+    if(!prize) return;
+    const newRedeemed = redeemedPts + prize.pts;
+    setRedeemed(newRedeemed);
+    setLast({prizeMode:true, prize});
+    // Save immediately to Supabase so refresh doesn't undo it
+    if(userId) {
+      await supabase.from("entries").upsert({
+        id: userId,
+        name: user.name,
+        initials: getInitials(user.name),
+        points: Math.max(0, rawPoints - newRedeemed),
+        vendor_stamps: vendorStamps,
+        solo_completed: soloCompleted,
+        draw_submitted: drawDone,
+        prize_label: getPrize(Math.max(0, rawPoints - newRedeemed))?.label || null,
+        redeemed_points: newRedeemed,
+        uploads: uploads,
+        updated_at: new Date().toISOString(),
+      });
+    }
     setScreen("prizeClaimed");
   };
 
