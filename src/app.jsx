@@ -155,8 +155,9 @@ const VENDOR_CATEGORIES = [
 ];
 
 const SOLO_TASKS = [
-  { id:"f1car",     label:"F1 Car Photo",    desc:"Take a photo with the Red Bull F1 car — upload your shot", pin:"1305", points:1, icon:"🏎️", hasUpload:true },
-  { id:"instagram", label:"Instagram Story", desc:"Post a story tagging @unmarked.au — upload your screenshot", pin:"1305", points:1, icon:"📱", hasUpload:true },
+  { id:"f1car",     label:"F1 Car Photo",          desc:"Take a photo with the Red Bull F1 car — upload your shot",              pin:"1305", points:2, icon:"🏎️", hasUpload:true },
+  { id:"instagram", label:"Instagram Story",        desc:"Post a story on Instagram mentioning @unmarked.au — upload screenshot", pin:"1305", points:2, icon:"📱", hasUpload:true },
+  { id:"favcar",    label:"Favourite Car Photo",    desc:"Take a photo of your favourite car — counts towards awards",            pin:"1305", points:2, icon:"⭐", hasUpload:true },
 ];
 
 const REQUIRED = 5;
