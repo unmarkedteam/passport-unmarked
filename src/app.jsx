@@ -1000,8 +1000,26 @@ export default function App() {
         const { data: urlData } = supabase.storage
           .from("passport-uploads")
           .getPublicUrl(filename);
+        const publicUrl = urlData.publicUrl;
         // Store the public URL instead of base64
-        setUploads(u => ({...u, [taskId]: urlData.publicUrl}));
+        const newUploads = {...uploads, [taskId]: publicUrl};
+        setUploads(newUploads);
+        // Immediately save to entries so admin sees it right away
+        if(userId) {
+          await supabase.from("entries").upsert({
+            id: userId,
+            name: user?.name,
+            initials: getInitials(user?.name||""),
+            points,
+            vendor_stamps: vendorStamps,
+            solo_completed: soloCompleted,
+            draw_submitted: drawDone,
+            prize_label: getPrize(points)?.label || null,
+            redeemed_points: redeemedPts,
+            uploads: newUploads,
+            updated_at: new Date().toISOString(),
+          });
+        }
       }
     } catch(e) { console.error("Upload failed", e); }
   };
