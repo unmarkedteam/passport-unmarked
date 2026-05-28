@@ -238,7 +238,7 @@ function RegisterScreen({onRegister}) {
   const [err, setErr]   = useState("");
   const set = k => e => setForm(f=>({...f,[k]:e.target.value}));
   const submit = () => {
-    if(!form.name||!form.phone||!form.email){setErr("Name, phone and email are required.");return;}
+    if(!form.name||!form.phone){setErr("Name and phone number are required.");return;}
     onRegister(form);
   };
   return (
@@ -250,10 +250,9 @@ function RegisterScreen({onRegister}) {
         <p style={S.pageSub}>We'll use this to contact you if you win, and for future Unmarked drops.</p>
         <div style={{height:24}}/>
         {[
-          {k:"name",      label:"FULL NAME *",      ph:"Jordan Lee",    t:"text"},
-          {k:"phone",     label:"PHONE NUMBER *",   ph:"04XX XXX XXX",  t:"tel"},
-          {k:"email",     label:"EMAIL ADDRESS *",  ph:"you@email.com", t:"email"},
-          {k:"instagram", label:"INSTAGRAM HANDLE", ph:"@yourhandle",   t:"text"},
+          {k:"name",  label:"FULL NAME *",      ph:"Jordan Lee",    t:"text"},
+          {k:"phone", label:"PHONE NUMBER *",   ph:"04XX XXX XXX",  t:"tel"},
+          {k:"email", label:"EMAIL (OPTIONAL)", ph:"you@email.com", t:"email"},
         ].map(f=>(
           <div key={f.k} style={S.field}>
             <label style={S.fieldLbl}>{f.label}</label>
@@ -262,6 +261,9 @@ function RegisterScreen({onRegister}) {
         ))}
         {err && <div style={S.errMsg}>{err}</div>}
         <PrimaryBtn onClick={submit} style={{marginTop:8}}>ACTIVATE PASSPORT →</PrimaryBtn>
+        <div style={S.disclaimer}>
+          By activating your passport you agree to receive future updates and marketing from Unmarked. Your details will never be shared with third parties. You can opt out at any time by contacting us at team@unmarked.au
+        </div>
       </div>
     </div>
   );
@@ -909,6 +911,7 @@ const S = {
   fieldLbl:{display:"block",fontSize:10,letterSpacing:"0.3em",color:DIM,marginBottom:7,fontFamily:MONO},
   fieldInput:{width:"100%",background:CARD,border:`1px solid ${EDGE}`,color:WHITE,padding:"13px 14px",fontSize:15,fontFamily:SANS,outline:"none",boxSizing:"border-box",borderRadius:0},
   errMsg:{color:"#ff5555",fontSize:12,marginBottom:12,fontFamily:MONO},
+  disclaimer:{marginTop:16,fontSize:11,color:DIM,fontFamily:MONO,lineHeight:1.7,letterSpacing:"0.02em",borderTop:`1px solid ${EDGE}`,paddingTop:16},
   primaryBtn:{width:"100%",background:ACCENT,color:"#000",border:"none",padding:"17px 24px",fontSize:12,fontWeight:900,letterSpacing:"0.18em",cursor:"pointer",fontFamily:BLACK,display:"block"},
 
   heroCard:{background:CARD,borderBottom:`1px solid ${EDGE}`,padding:"22px 18px 18px"},
