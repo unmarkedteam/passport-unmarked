@@ -696,7 +696,10 @@ function SuccessScreen({label, icon, earnedPts, totalPoints, onContinue}) {
       <div style={S.successLabel}>{label}</div>
       <div style={S.successPts}>+{earnedPts} point{earnedPts>1?"s":""} earned</div>
       <div style={S.successTotal}>{totalPoints} total points</div>
-      <PrimaryBtn onClick={onContinue} style={{marginTop:32,maxWidth:320}}>BACK TO PASSPORT →</PrimaryBtn>
+      <p style={{color:DIM,fontSize:12,fontFamily:MONO,marginTop:24,marginBottom:16,letterSpacing:"0.15em",textAlign:"center"}}>
+        SHOW THIS SCREEN TO THE VENDOR
+      </p>
+      <button style={S.closeBtn} onClick={onContinue}>✕ &nbsp; CLOSE</button>
     </div>
   );
 }
@@ -1072,4 +1075,5 @@ const S = {
   successPts:{fontSize:20,color:ACCENT,fontWeight:700,marginBottom:4,fontFamily:BLACK},
   successTotal:{fontSize:12,color:DIM,marginBottom:32,fontFamily:MONO},
   drawNote:{color:DIM,fontSize:13,lineHeight:1.8,marginBottom:32,maxWidth:300},
+  closeBtn:{marginTop:8,background:"transparent",border:`2px solid ${WHITE}`,color:WHITE,padding:"16px 48px",fontSize:16,fontWeight:900,letterSpacing:"0.2em",cursor:"pointer",fontFamily:BLACK},
 };
