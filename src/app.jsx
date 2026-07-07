@@ -1,4 +1,17 @@
 import { useState, useEffect, useCallback } from "react";
+
+// Inject Futura-style font (Jost) globally
+const FontLoader = () => {
+  useEffect(() => {
+    const link = document.createElement("link");
+    link.href = "https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,700;1,800;1,900&display=swap";
+    link.rel = "stylesheet";
+    document.head.appendChild(link);
+    document.body.style.background = "#E8E6DF";
+    document.body.style.margin = "0";
+  }, []);
+  return null;
+};
 import { createClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = "https://phztevkpvtpvrbpirmcp.supabase.co";
@@ -501,12 +514,12 @@ function LeaderboardTab({currentUser, currentPoints, leaderboard}) {
           return (
             <div key={entry.id} style={{...S.lbRow,...(isMe?S.lbRowMe:{})}}>
               <div style={S.lbRank}>{medal||`${i+1}`}</div>
-              <div style={S.lbInitials}>{entry.initials}</div>
+              <div style={{...S.lbInitials,...(isMe?{background:"rgba(255,255,255,0.1)",color:"#FFF"}:{})}}>{entry.initials}</div>
               <div style={S.lbEntryBody}>
-                <div style={S.lbEntryName}>{isMe?"YOU":entry.initials}</div>
+                <div style={{...S.lbEntryName,...(isMe?{color:"#FFF"}:{})}}>{isMe?"YOU":entry.initials}</div>
                 {entry.prize && <div style={S.lbEntryPrize}>{entry.prize.icon} {entry.prize.label}</div>}
               </div>
-              <div style={{...S.lbEntryPts,...(isMe?{color:ACCENT}:{})}}>{entry.points}</div>
+              <div style={{...S.lbEntryPts,...(isMe?{color:ACCENT,}:{})}}>{entry.points}</div>
             </div>
           );
         })}
@@ -697,7 +710,7 @@ function ClaimPrizesScreen({points, onSuccess, onBack}) {
       <TopBar title="CLAIM PRIZES" onBack={onBack}/>
       <div style={S.pinHeader}>
         <div style={S.bigIcon}>{prize?.icon||"🎁"}</div>
-        <Eyebrow color="#C8FF00">PRIZE REDEMPTION</Eyebrow>
+        <Eyebrow color={ACCENT}>PRIZE REDEMPTION</Eyebrow>
         <h2 style={S.pageTitle}>YOU'VE EARNED A PRIZE!</h2>
         <p style={S.pageSub}>Show this screen to Unmarked staff. They will enter the redemption PIN to claim your prize and deduct points.</p>
       </div>
@@ -714,15 +727,15 @@ function ClaimPrizesScreen({points, onSuccess, onBack}) {
         {PRIZES.filter(p=>points>=p.pts).reverse().map(p=>(
           <div key={p.pts} style={S.claimTierRow}>
             <span>{p.icon}</span>
-            <span style={{color:WHITE,fontSize:13,fontFamily:BLACK,letterSpacing:"0.04em"}}>{p.label}</span>
-            <span style={{color:DIM,fontSize:11,fontFamily:MONO,flex:1,paddingLeft:6}}>{p.desc}</span>
-            <span style={{color:ACCENT,fontSize:11,fontFamily:MONO}}>{p.pts}pts</span>
+            <span style={{color:"#FFF",fontSize:13,fontFamily:JOST,fontWeight:700,letterSpacing:"0.01em"}}>{p.label}</span>
+            <span style={{color:"rgba(255,255,255,0.4)",fontSize:11,fontFamily:JOST,flex:1,paddingLeft:6}}>{p.desc}</span>
+            <span style={{color:ACCENT,fontSize:12,fontFamily:JOST,fontWeight:700}}>{p.pts}pts</span>
           </div>
         ))}
       </div>
 
       <div style={{textAlign:"center",padding:"0 24px 12px"}}>
-        <div style={{fontSize:11,color:DIM,fontFamily:MONO,letterSpacing:"0.1em"}}>STAFF: ENTER REDEMPTION PIN</div>
+        <div style={{fontSize:12,color:TEXT2,fontFamily:JOST,letterSpacing:"0.05em",fontWeight:600,textTransform:"uppercase"}}>Staff: Enter Redemption PIN</div>
       </div>
 
       <div style={{...S.dots,...(shake?{animation:"shake .3s"}:{})}}>
@@ -751,7 +764,7 @@ function SuccessScreen({label, icon, earnedPts, totalPoints, onContinue}) {
       <div style={S.successLabel}>{label}</div>
       <div style={S.successPts}>+{earnedPts} point{earnedPts>1?"s":""} earned</div>
       <div style={S.successTotal}>{totalPoints} total points</div>
-      <p style={{color:DIM,fontSize:12,fontFamily:MONO,marginTop:24,marginBottom:16,letterSpacing:"0.15em",textAlign:"center"}}>
+      <p style={{color:TEXT3,fontSize:12,fontFamily:JOST,marginTop:24,marginBottom:16,letterSpacing:"0.1em",textAlign:"center",fontWeight:600}}>
         SHOW THIS SCREEN TO THE VENDOR
       </p>
       <button style={S.closeBtn} onClick={onContinue}>✕ &nbsp; CLOSE</button>
@@ -1145,211 +1158,248 @@ export default function App() {
 }
 
 // ─── STYLES ───────────────────────────────────────────────────────────────────
-const BG="#000000",CARD="#0a0a0a",CARD2="#0d0d0d",EDGE="#1a1a1a",ACCENT="#FFE500",ACCENT2="#4DAAFF",WHITE="#FFFFFF",DIM="#555555",DIM2="#2a2a2a";
-const MONO="'Courier New', monospace",SANS="'Helvetica Neue', Arial, sans-serif",BLACK="'Arial Black', Impact, 'Helvetica Neue', sans-serif";
+const BG    = "#E8E6DF";   // Claude warm grey
+const CARD  = "#FFFFFF";   // elevated white
+const CARD2 = "#F2F0E9";   // secondary surface
+const EDGE  = "#D4D2CA";   // subtle border
+const SHADOW = "0 2px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04)";
+const ACCENT = "#FFE500";  // yellow
+const ACCENT_DARK = "#1A1A1A"; // text on yellow
+const WHITE = "#FFFFFF";
+const TEXT1 = "#1C1C1E";   // primary text
+const TEXT2 = "#6E6E73";   // secondary
+const TEXT3 = "#AEAEB2";   // tertiary
+const DIM   = "#6E6E73";
+const DIM2  = "#D4D2CA";
+const JOST  = "'Jost', 'Futura', 'Century Gothic', 'Trebuchet MS', sans-serif";
+const MONO  = "'Courier New', monospace";
+const SANS  = JOST;
+const BLACK = JOST;
 
 const S = {
-  splash:{minHeight:"100vh",background:BG,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"40px 24px",position:"relative",overflow:"hidden",fontFamily:SANS},
-  splashGrid:{position:"absolute",inset:0,backgroundImage:`linear-gradient(${EDGE} 1px,transparent 1px),linear-gradient(90deg,${EDGE} 1px,transparent 1px)`,backgroundSize:"40px 40px",opacity:0.5},
-  splashInner:{textAlign:"center",position:"relative",zIndex:1},
-  splashTopLogo:{position:"absolute",top:20,left:24,height:24,width:"auto",objectFit:"contain"},
-  splashRule:{width:60,height:1,background:DIM2,margin:"0 auto 20px"},
-  splashTitle:{fontSize:"clamp(48px,14vw,72px)",fontWeight:900,color:WHITE,letterSpacing:"-0.03em",margin:0,lineHeight:1,fontFamily:BLACK},
-  splashColon:{color:ACCENT,fontSize:40,fontWeight:900,lineHeight:1.4},
-  splashSub:{fontSize:"clamp(48px,14vw,72px)",fontWeight:900,margin:0,lineHeight:1,color:"transparent",WebkitTextStroke:`2px ${WHITE}`,fontFamily:BLACK,letterSpacing:"-0.03em"},
-  splashTag:{color:DIM,fontSize:12,letterSpacing:"0.2em",marginTop:20,fontFamily:MONO},
-  splashFooterRow:{position:"absolute",bottom:20,left:0,right:0,display:"flex",justifyContent:"space-between",padding:"0 24px"},
-  splashFooterTxt:{color:DIM2,fontSize:10,letterSpacing:"0.25em",fontFamily:MONO},
+  // ── Splash (keep dark/dramatic) ─────────────────────────────────────────
+  splash:{minHeight:"100vh",background:"#111",display:"flex",flexDirection:"column",alignItems:"stretch",justifyContent:"center",position:"relative",overflow:"hidden",fontFamily:JOST},
+  splashGrid:{position:"absolute",inset:0,backgroundImage:`linear-gradient(rgba(255,255,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.03) 1px,transparent 1px)`,backgroundSize:"32px 32px"},
+  splashHeaderBar:{position:"relative",zIndex:2,display:"flex",justifyContent:"space-between",alignItems:"flex-start",padding:"20px 24px 16px",borderBottom:"1px solid rgba(255,255,255,0.07)"},
+  splashHeaderLeft:{display:"flex",flexDirection:"column",gap:4},
+  splashHeaderRight:{display:"flex",alignItems:"center"},
+  splashSysRow:{display:"flex",gap:10,alignItems:"center"},
+  splashSysLabel:{fontSize:9,color:"rgba(255,255,255,0.25)",letterSpacing:"0.2em",fontFamily:MONO},
+  splashSysVal:{fontSize:9,color:"rgba(255,255,255,0.45)",letterSpacing:"0.1em",fontFamily:MONO},
+  splashTopLogo:{height:20,width:"auto",objectFit:"contain",opacity:0.85},
+  splashBarcode:{position:"relative",zIndex:2,display:"flex",alignItems:"flex-end",gap:2,padding:"14px 24px",borderBottom:"1px solid rgba(255,255,255,0.06)",background:"transparent"},
+  splashBarcodeBar:{height:32,background:"rgba(255,255,255,0.6)",flexShrink:0},
+  splashBarcodeLabel:{fontSize:9,color:"rgba(255,255,255,0.25)",letterSpacing:"0.3em",fontFamily:MONO,marginLeft:12,paddingBottom:2},
+  splashInner:{textAlign:"center",position:"relative",zIndex:1,padding:"48px 24px 40px",flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"},
+  splashTransmission:{fontSize:9,color:"rgba(255,255,255,0.2)",letterSpacing:"0.3em",fontFamily:MONO,marginBottom:24},
+  splashTitle:{fontSize:"clamp(56px,16vw,84px)",fontWeight:900,color:"#FFF",letterSpacing:"-0.04em",margin:0,lineHeight:0.92,fontFamily:JOST,fontStyle:"italic"},
+  splashColon:{color:ACCENT,fontSize:44,fontWeight:900,lineHeight:1.3,fontFamily:JOST,fontStyle:"italic"},
+  splashSub:{fontSize:"clamp(56px,16vw,84px)",fontWeight:900,margin:0,lineHeight:0.92,color:"transparent",WebkitTextStroke:"2px rgba(255,255,255,0.7)",fontFamily:JOST,letterSpacing:"-0.04em",fontStyle:"italic"},
+  splashTag:{color:"rgba(255,255,255,0.3)",fontSize:12,letterSpacing:"0.2em",marginTop:28,fontFamily:JOST,fontWeight:300},
+  splashFooterRow:{position:"relative",zIndex:2,display:"flex",justifyContent:"space-between",padding:"16px 24px",borderTop:"1px solid rgba(255,255,255,0.06)"},
+  splashFooterTxt:{color:"rgba(255,255,255,0.2)",fontSize:9,letterSpacing:"0.25em",fontFamily:MONO},
 
-  screen:{minHeight:"100vh",background:"#000",color:WHITE,fontFamily:SANS,paddingBottom:60,maxWidth:500,margin:"0 auto"},
+  // ── Core Layout ──────────────────────────────────────────────────────────
+  screen:{minHeight:"100vh",background:BG,color:TEXT1,fontFamily:JOST,paddingBottom:80,maxWidth:500,margin:"0 auto"},
   pad:{padding:"24px 20px 0"},
-  eyebrow:{color:ACCENT,fontSize:9,letterSpacing:"0.35em",marginBottom:8,fontFamily:MONO},
-  pageTitle:{fontSize:24,fontWeight:900,margin:"0 0 6px",letterSpacing:"-0.02em",color:WHITE,fontFamily:BLACK},
-  pageSub:{color:DIM,fontSize:13,lineHeight:1.6,margin:0},
-  sectionLabel:{padding:"20px 20px 10px",fontSize:9,letterSpacing:"0.35em",color:"#444",fontFamily:MONO},
+  eyebrow:{color:TEXT2,fontSize:10,letterSpacing:"0.3em",marginBottom:6,fontFamily:MONO,textTransform:"uppercase"},
+  pageTitle:{fontSize:26,fontWeight:800,margin:"0 0 6px",letterSpacing:"-0.03em",color:TEXT1,fontFamily:JOST},
+  pageSub:{color:TEXT2,fontSize:14,lineHeight:1.6,margin:0,fontWeight:400},
+  sectionLabel:{padding:"24px 20px 10px",fontSize:10,letterSpacing:"0.3em",color:TEXT3,fontFamily:MONO,textTransform:"uppercase"},
 
-  topBar:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px",borderBottom:`1px solid ${EDGE}`,background:"#000",position:"sticky",top:0,zIndex:10},
-  topBarLogo:{height:22,width:"auto",objectFit:"contain"},
-  topBarTitle:{fontSize:11,fontWeight:700,letterSpacing:"0.2em",color:DIM,fontFamily:MONO,flex:1,textAlign:"center"},
-  topBarBack:{background:"none",border:"none",color:DIM,fontSize:18,cursor:"pointer",padding:"0 4px",width:36},
+  // ── Top Bar ──────────────────────────────────────────────────────────────
+  topBar:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",background:BG,position:"sticky",top:0,zIndex:10,boxShadow:"0 1px 0 rgba(0,0,0,0.08)"},
+  topBarLogo:{height:20,width:"auto",objectFit:"contain",filter:"invert(1)",opacity:0.85},
+  topBarTitle:{fontSize:12,fontWeight:700,letterSpacing:"0.15em",color:TEXT2,fontFamily:JOST,flex:1,textAlign:"center",textTransform:"uppercase"},
+  topBarBack:{background:"none",border:"none",color:TEXT2,fontSize:20,cursor:"pointer",padding:"0 4px",width:36,display:"flex",alignItems:"center"},
 
-  bottomNav:{position:"fixed",bottom:0,left:0,right:0,background:"#000",borderTop:`1px solid ${EDGE}`,display:"flex",zIndex:100,maxWidth:500,margin:"0 auto"},
-  navBtn:{flex:1,background:"none",border:"none",padding:"12px 0 14px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3},
-  navBtnActive:{borderTop:`2px solid ${ACCENT}`,background:"#0d0d00"},
+  // ── Bottom Nav ───────────────────────────────────────────────────────────
+  bottomNav:{position:"fixed",bottom:0,left:0,right:0,background:"rgba(232,230,223,0.92)",backdropFilter:"blur(20px)",WebkitBackdropFilter:"blur(20px)",borderTop:"1px solid rgba(0,0,0,0.08)",display:"flex",zIndex:100,maxWidth:500,margin:"0 auto"},
+  navBtn:{flex:1,background:"none",border:"none",padding:"10px 0 14px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3},
+  navBtnActive:{borderTop:`2px solid ${ACCENT}`},
   navIcon:{fontSize:18},
-  navLabel:{fontSize:9,letterSpacing:"0.2em",color:DIM,fontFamily:MONO},
+  navLabel:{fontSize:9,letterSpacing:"0.15em",color:TEXT3,fontFamily:JOST,fontWeight:600,textTransform:"uppercase"},
 
-  field:{marginBottom:18},
-  fieldLbl:{display:"block",fontSize:10,letterSpacing:"0.3em",color:DIM,marginBottom:7,fontFamily:MONO},
-  fieldInput:{width:"100%",background:CARD,border:`1px solid ${EDGE}`,color:WHITE,padding:"13px 14px",fontSize:15,fontFamily:SANS,outline:"none",boxSizing:"border-box",borderRadius:0},
-  errMsg:{color:"#ff5555",fontSize:12,marginBottom:12,fontFamily:MONO},
-  disclaimer:{marginTop:16,fontSize:11,color:DIM,fontFamily:MONO,lineHeight:1.7,letterSpacing:"0.02em",borderTop:`1px solid ${EDGE}`,paddingTop:16},
-  primaryBtn:{width:"100%",background:ACCENT,color:"#000",border:"none",padding:"17px 24px",fontSize:12,fontWeight:900,letterSpacing:"0.18em",cursor:"pointer",fontFamily:BLACK,display:"block",fontStyle:"italic"},
+  // ── Form ─────────────────────────────────────────────────────────────────
+  field:{marginBottom:20},
+  fieldLbl:{display:"block",fontSize:11,letterSpacing:"0.15em",color:TEXT2,marginBottom:8,fontFamily:JOST,fontWeight:600,textTransform:"uppercase"},
+  fieldInput:{width:"100%",background:CARD,border:`1.5px solid ${EDGE}`,color:TEXT1,padding:"14px 16px",fontSize:15,fontFamily:JOST,outline:"none",boxSizing:"border-box",borderRadius:12,transition:"border-color 0.2s","::placeholder":{color:TEXT3}},
+  errMsg:{color:"#FF3B30",fontSize:13,marginBottom:12,fontFamily:JOST,fontWeight:500},
+  primaryBtn:{width:"100%",background:ACCENT,color:ACCENT_DARK,border:"none",padding:"17px 24px",fontSize:14,fontWeight:800,letterSpacing:"0.1em",cursor:"pointer",fontFamily:JOST,display:"block",borderRadius:14,boxShadow:`0 4px 20px rgba(255,229,0,0.35)`,textTransform:"uppercase"},
+  disclaimer:{marginTop:20,fontSize:12,color:TEXT3,fontFamily:JOST,lineHeight:1.7,borderTop:`1px solid ${EDGE}`,paddingTop:16,fontWeight:400},
 
-  heroCard:{background:"#000",borderBottom:`1px solid ${EDGE}`,padding:"22px 18px 18px",borderTop:`1px solid ${EDGE}`},
-  heroTop:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16},
-  holderName:{fontSize:18,fontWeight:900,color:WHITE,letterSpacing:"-0.01em",fontFamily:BLACK},
-  holderIg:{fontSize:11,color:DIM,marginTop:2,fontFamily:MONO},
-  ptsBadge:{background:ACCENT,color:"#000",textAlign:"center",padding:"8px 14px",minWidth:52},
-  ptsNum:{fontSize:22,fontWeight:900,lineHeight:1,fontFamily:BLACK},
-  ptsLbl:{fontSize:9,fontWeight:700,letterSpacing:"0.2em"},
-  progressTrack:{height:3,background:EDGE,marginBottom:7},
-  progressFill:{height:"100%",background:ACCENT,transition:"width 0.4s ease"},
-  progressLbl:{fontSize:11,color:DIM,fontFamily:MONO,letterSpacing:"0.05em"},
+  // ── Hero Card ────────────────────────────────────────────────────────────
+  heroCard:{background:"#1C1C1E",borderRadius:20,margin:"16px",padding:"22px 20px 20px",boxShadow:"0 8px 32px rgba(0,0,0,0.18)"},
+  heroTop:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:18},
+  holderName:{fontSize:20,fontWeight:800,color:"#FFF",letterSpacing:"-0.02em",fontFamily:JOST,marginTop:4},
+  holderIg:{fontSize:12,color:"rgba(255,255,255,0.4)",marginTop:2,fontFamily:JOST},
+  ptsBadge:{background:ACCENT,color:ACCENT_DARK,textAlign:"center",padding:"10px 16px",borderRadius:12,minWidth:60,boxShadow:`0 4px 14px rgba(255,229,0,0.4)`},
+  ptsNum:{fontSize:24,fontWeight:900,lineHeight:1,fontFamily:JOST},
+  ptsLbl:{fontSize:9,fontWeight:700,letterSpacing:"0.2em",textTransform:"uppercase"},
+  progressTrack:{height:4,background:"rgba(255,255,255,0.1)",marginBottom:8,borderRadius:2},
+  progressFill:{height:"100%",background:ACCENT,transition:"width 0.5s cubic-bezier(0.4,0,0.2,1)",borderRadius:2},
+  progressLbl:{fontSize:11,color:"rgba(255,255,255,0.4)",fontFamily:JOST,letterSpacing:"0.05em"},
+  prizeStatus:{marginTop:14,background:"rgba(255,229,0,0.1)",border:"1px solid rgba(255,229,0,0.2)",borderRadius:10,padding:"10px 14px",display:"flex",alignItems:"center",gap:10},
+  prizeStatusIcon:{fontSize:18},
+  prizeStatusLabel:{fontSize:9,color:ACCENT,letterSpacing:"0.25em",fontFamily:MONO,marginBottom:2},
+  prizeStatusName:{fontSize:13,color:"#FFF",fontWeight:600},
+  nextPrize:{marginTop:8,fontSize:11,color:"rgba(255,255,255,0.35)",fontFamily:JOST,letterSpacing:"0.03em"},
+  drawBtn:{width:"100%",marginTop:16,background:ACCENT,color:ACCENT_DARK,border:"none",padding:"14px",fontSize:13,fontWeight:800,letterSpacing:"0.08em",cursor:"pointer",fontFamily:JOST,borderRadius:12,textTransform:"uppercase",boxShadow:`0 4px 20px rgba(255,229,0,0.35)`},
+  submittedBadge:{marginTop:14,border:"1px solid rgba(255,229,0,0.3)",background:"rgba(255,229,0,0.08)",color:ACCENT,borderRadius:10,padding:"11px 14px",fontSize:12,fontWeight:700,letterSpacing:"0.1em",fontFamily:JOST,textAlign:"center"},
 
-  prizeStatus:{marginTop:12,background:"#1a1500",border:`1px solid #3a3000`,padding:"10px 12px",display:"flex",alignItems:"center",gap:10},
-  prizeStatusIcon:{fontSize:20},
-  prizeStatusLabel:{fontSize:9,color:ACCENT,letterSpacing:"0.3em",fontFamily:MONO,marginBottom:2},
-  prizeStatusName:{fontSize:12,color:WHITE,fontWeight:700},
-  nextPrize:{marginTop:8,fontSize:11,color:DIM,fontFamily:MONO,letterSpacing:"0.05em"},
-
-  drawBtn:{width:"100%",marginTop:14,background:ACCENT,color:"#000",border:"none",padding:"14px",fontSize:12,fontWeight:900,letterSpacing:"0.15em",cursor:"pointer",fontFamily:BLACK,fontStyle:"italic"},
-  submittedBadge:{marginTop:12,border:`1px solid ${ACCENT}`,background:"#1a1500",color:ACCENT,padding:"11px 14px",fontSize:11,fontWeight:700,letterSpacing:"0.12em",fontFamily:MONO,textAlign:"center"},
-
-  claimBtnWrap:{position:"fixed",bottom:64,left:0,right:0,padding:"0 16px",maxWidth:500,margin:"0 auto",zIndex:90},
-  claimBtn:{width:"100%",background:"#FFD700",color:"#000",border:"none",padding:"16px",fontSize:13,fontWeight:900,letterSpacing:"0.2em",cursor:"pointer",fontFamily:BLACK,boxShadow:"0 -4px 20px rgba(255,215,0,0.3)"},
-
+  // ── Category Cards (passport hub) ────────────────────────────────────────
   catList:{padding:"0 16px",display:"flex",flexDirection:"column",gap:10},
-  catCard:{display:"flex",alignItems:"center",gap:0,background:CARD,border:`1px solid ${EDGE}`,overflow:"hidden",cursor:"pointer"},
-  catAccent:{width:4,alignSelf:"stretch",flexShrink:0},
-  catIcon:{fontSize:22,padding:"16px 10px 16px 14px",flexShrink:0},
-  catBody:{flex:1,padding:"14px 0",minWidth:0},
-  catName:{fontSize:14,fontWeight:700,color:WHITE,marginBottom:2,fontFamily:BLACK,letterSpacing:"0.01em"},
-  catDesc:{fontSize:11,color:DIM,fontFamily:MONO,marginBottom:8},
+  catCard:{display:"flex",alignItems:"center",gap:0,background:CARD,borderRadius:16,overflow:"hidden",cursor:"pointer",boxShadow:SHADOW},
+  catAccent:{width:5,alignSelf:"stretch",flexShrink:0},
+  catIcon:{fontSize:22,padding:"18px 12px 18px 16px",flexShrink:0},
+  catBody:{flex:1,padding:"16px 0",minWidth:0},
+  catName:{fontSize:15,fontWeight:700,color:TEXT1,marginBottom:3,fontFamily:JOST,letterSpacing:"-0.01em"},
+  catDesc:{fontSize:12,color:TEXT2,marginBottom:10,fontFamily:JOST,fontWeight:400},
   catProgressRow:{display:"flex",alignItems:"center",gap:8},
-  catProgressTrack:{flex:1,height:2,background:EDGE},
-  catProgressFill:{height:"100%",transition:"width 0.4s ease"},
-  catCount:{fontSize:10,color:DIM,fontFamily:MONO,whiteSpace:"nowrap",paddingRight:4},
-  catHeroBadge:{border:"none",borderBottom:`1px solid ${EDGE}`,padding:"20px 16px",display:"flex",gap:14,alignItems:"flex-start",marginBottom:0,background:"#000"},
-  catHeroIcon:{fontSize:30,flexShrink:0},
-  catHeroDesc:{fontSize:15,color:WHITE,fontWeight:700,marginBottom:4,fontFamily:"'Helvetica Neue',Arial,sans-serif"},
-  catHeroRule:{fontSize:12,color:"#555",fontFamily:"'Helvetica Neue',Arial,sans-serif"},
+  catProgressTrack:{flex:1,height:3,background:EDGE,borderRadius:2},
+  catProgressFill:{height:"100%",transition:"width 0.4s ease",borderRadius:2},
+  catCount:{fontSize:11,color:TEXT3,fontFamily:JOST,whiteSpace:"nowrap",paddingRight:4,fontWeight:500},
+  arrow:{color:TEXT3,fontSize:20,lineHeight:1,paddingRight:16},
 
-  taskList:{padding:"0 16px",display:"flex",flexDirection:"column",gap:8},
-  vList:{display:"flex",flexDirection:"column"},
-  taskCard:{display:"flex",alignItems:"center",gap:12,background:CARD,border:`1px solid ${EDGE}`,padding:"14px",cursor:"pointer"},
-  taskDone:{background:"#111000",border:`1px solid #2a2200`,opacity:0.85},
-  taskIcon:{fontSize:22,width:28,textAlign:"center",flexShrink:0},
+  // ── Category hero ─────────────────────────────────────────────────────────
+  catHeroBadge:{border:"none",borderBottom:`1px solid ${EDGE}`,padding:"20px 16px",display:"flex",gap:14,alignItems:"flex-start",marginBottom:0,background:CARD},
+  catHeroIcon:{fontSize:32,flexShrink:0},
+  catHeroDesc:{fontSize:15,color:TEXT1,fontWeight:600,marginBottom:4,fontFamily:JOST},
+  catHeroRule:{fontSize:12,color:TEXT2,fontFamily:JOST,fontWeight:400},
+
+  // ── New vendor rows ───────────────────────────────────────────────────────
+  vList:{display:"flex",flexDirection:"column",background:CARD,margin:"12px 16px",borderRadius:16,overflow:"hidden",boxShadow:SHADOW},
+  vRow:{display:"flex",alignItems:"flex-start",gap:14,padding:"16px 16px",borderBottom:`1px solid ${EDGE}`,background:CARD,cursor:"pointer",WebkitTapHighlightColor:"transparent"},
+  vRowDone:{background:CARD2,cursor:"default"},
+  vStatus:{width:26,height:26,borderRadius:"50%",border:"2px solid",flexShrink:0,marginTop:1,display:"flex",alignItems:"center",justifyContent:"center"},
+  vBody:{flex:1,minWidth:0},
+  vName:{fontSize:15,fontWeight:700,letterSpacing:"-0.01em",marginBottom:3,fontFamily:JOST,lineHeight:1.2,color:TEXT1},
+  vAction:{fontSize:13,color:TEXT2,fontFamily:JOST,lineHeight:1.4,fontWeight:400},
+  vHint:{fontSize:11,color:TEXT3,marginTop:5,fontFamily:JOST,fontWeight:400},
+  vRight:{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4,paddingTop:1,flexShrink:0},
+  vPts:{fontSize:17,fontWeight:800,letterSpacing:"-0.02em",fontFamily:JOST,color:TEXT1},
+  vChevron:{color:TEXT3,fontSize:20,lineHeight:1,marginTop:2},
+  vUploadBtn:{display:"flex",alignItems:"center",gap:8,background:BG,border:`1.5px solid ${EDGE}`,color:TEXT2,padding:"8px 14px",fontSize:12,fontFamily:JOST,letterSpacing:"0.05em",cursor:"pointer",borderRadius:8,marginTop:8,fontWeight:500},
+  vStaffBtn:{background:ACCENT,border:"none",color:ACCENT_DARK,padding:"12px 16px",fontSize:12,fontWeight:800,letterSpacing:"0.08em",cursor:"pointer",fontFamily:JOST,width:"100%",borderRadius:10,marginTop:8,textTransform:"uppercase"},
+
+  // ── Solo task cards ───────────────────────────────────────────────────────
+  taskList:{padding:"0 16px",display:"flex",flexDirection:"column",gap:10},
+  taskCard:{display:"flex",alignItems:"center",gap:12,background:CARD,borderRadius:14,padding:"16px",cursor:"pointer",boxShadow:SHADOW},
+  taskDone:{background:CARD2,cursor:"default",opacity:0.8},
+  taskIcon:{fontSize:22,width:30,textAlign:"center",flexShrink:0},
   taskBody:{flex:1,minWidth:0},
-  taskName:{fontSize:13,fontWeight:700,color:WHITE,marginBottom:2},
-  taskDesc:{fontSize:11,color:DIM,lineHeight:1.4,fontFamily:MONO},
-  voteTag:{fontSize:10,color:ACCENT,marginTop:4,fontFamily:MONO},
-  taskRight:{flexShrink:0,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:5},
-  taskPts:{fontSize:10,fontWeight:700,color:DIM,background:EDGE,padding:"3px 7px",fontFamily:MONO},
-  taskPtsDone:{color:ACCENT,background:"#1a1500"},
-  checkStamp:{color:ACCENT,fontWeight:900,fontSize:17,fontStyle:"italic"},
-  arrow:{color:DIM,fontSize:20,lineHeight:1,paddingRight:4},
-  uploadSection:{marginTop:10,borderTop:`1px solid ${EDGE}`,paddingTop:10},
-  uploadLabel:{display:"flex",alignItems:"center",gap:8,background:EDGE,padding:"12px 14px",cursor:"pointer",fontSize:11,letterSpacing:"0.15em",fontFamily:"'Courier New',monospace",color:DIM},
+  taskName:{fontSize:15,fontWeight:700,color:TEXT1,marginBottom:2,fontFamily:JOST,letterSpacing:"-0.01em"},
+  taskDesc:{fontSize:12,color:TEXT2,lineHeight:1.4,fontFamily:JOST,fontWeight:400},
+  voteTag:{fontSize:11,color:TEXT1,marginTop:4,fontFamily:JOST,fontWeight:500},
+  taskRight:{flexShrink:0,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6},
+  taskPts:{fontSize:12,fontWeight:700,color:TEXT3,background:BG,padding:"3px 9px",fontFamily:JOST,borderRadius:6},
+  taskPtsDone:{color:TEXT2,background:EDGE},
+  checkStamp:{color:"#34C759",fontWeight:900,fontSize:18},
+
+  // ── Upload ────────────────────────────────────────────────────────────────
+  uploadSection:{marginTop:12,borderTop:`1px solid ${EDGE}`,paddingTop:12},
+  uploadLabel:{display:"flex",alignItems:"center",gap:8,background:BG,padding:"11px 14px",cursor:"pointer",fontSize:12,letterSpacing:"0.05em",fontFamily:JOST,color:TEXT2,borderRadius:10,border:`1.5px dashed ${EDGE}`,fontWeight:500},
   uploadIcon:{fontSize:16},
   uploadPreviewWrap:{display:"flex",gap:12,alignItems:"flex-start"},
-  uploadPreview:{width:72,height:72,objectFit:"cover",borderRadius:2,flexShrink:0},
-  uploadPreviewActions:{flex:1,display:"flex",flexDirection:"column",gap:8},
-  uploadPreviewTick:{fontSize:11,color:ACCENT,fontFamily:"'Courier New',monospace",letterSpacing:"0.1em"},
-  uploadConfirmBtn:{background:ACCENT,color:"#000",border:"none",padding:"10px 14px",fontSize:11,fontWeight:900,letterSpacing:"0.15em",cursor:"pointer",fontFamily:"'Arial Black','Helvetica Neue',sans-serif"},
+  uploadPreview:{width:70,height:70,objectFit:"cover",borderRadius:8,flexShrink:0},
+  uploadPreviewActions:{flex:1,display:"flex",flexDirection:"column",gap:6},
+  uploadPreviewTick:{fontSize:12,color:"#34C759",fontFamily:JOST,fontWeight:600},
+  uploadConfirmBtn:{background:ACCENT,color:ACCENT_DARK,border:"none",padding:"11px 14px",fontSize:12,fontWeight:800,letterSpacing:"0.08em",cursor:"pointer",fontFamily:JOST,borderRadius:10,width:"100%",textTransform:"uppercase"},
 
-  vendorRow:{display:"flex",alignItems:"center",gap:12,background:CARD,border:`1px solid ${EDGE}`,padding:"14px",cursor:"pointer"},
-  vendorDone:{background:"#111000",border:`1px solid #2a2200`},
-  vendorDot:{width:10,height:10,borderRadius:"50%",border:"2px solid",flexShrink:0,marginTop:2},
-  vendorBody:{flex:1,minWidth:0},
-  vendorName:{fontSize:13,fontWeight:700,color:WHITE,fontFamily:BLACK,letterSpacing:"0.04em",marginBottom:2},
-  vendorAction:{fontSize:11,color:DIM,fontFamily:MONO},
+  // ── Submit footer ─────────────────────────────────────────────────────────
+  submitFooter:{margin:"20px 16px 0",background:CARD,border:"none",borderLeft:`4px solid ${ACCENT}`,padding:"18px 20px",display:"flex",alignItems:"center",gap:16,borderRadius:"0 14px 14px 0",boxShadow:SHADOW},
+  submitHeading:{fontSize:14,fontWeight:800,color:TEXT1,letterSpacing:"0.05em",fontFamily:JOST,marginBottom:3,textTransform:"uppercase"},
+  submitSub:{fontSize:12,color:TEXT2,fontFamily:JOST,lineHeight:1.4,fontWeight:400},
 
-  // NEW Apple-clarity vendor rows
-  vRow:{display:"flex",alignItems:"flex-start",gap:14,padding:"18px 16px",borderBottom:`1px solid #111`,background:"#000",cursor:"pointer",WebkitTapHighlightColor:"transparent"},
-  vRowDone:{background:"#080800",cursor:"default"},
-  vStatus:{width:24,height:24,borderRadius:"50%",border:"2px solid",flexShrink:0,marginTop:2,display:"flex",alignItems:"center",justifyContent:"center"},
-  vBody:{flex:1,minWidth:0},
-  vName:{fontSize:16,fontWeight:800,letterSpacing:"-0.01em",marginBottom:3,fontFamily:"'Helvetica Neue',Arial,sans-serif",lineHeight:1.2},
-  vAction:{fontSize:13,color:"#777",fontFamily:"'Helvetica Neue',Arial,sans-serif",lineHeight:1.4,fontWeight:400},
-  vHint:{fontSize:11,color:"#444",marginTop:6,fontFamily:"'Helvetica Neue',Arial,sans-serif"},
-  vRight:{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6,paddingTop:2,flexShrink:0},
-  vPts:{fontSize:18,fontWeight:800,letterSpacing:"-0.02em",fontFamily:"'Helvetica Neue',Arial,sans-serif"},
-  vChevron:{color:"#444",fontSize:22,lineHeight:1,marginTop:2},
-  vUploadBtn:{display:"flex",alignItems:"center",gap:6,background:"#111",border:`1px solid #222`,color:"#aaa",padding:"8px 14px",fontSize:11,fontFamily:MONO,letterSpacing:"0.12em",cursor:"pointer"},
-  vStaffBtn:{background:ACCENT,border:"none",color:"#000",padding:"10px 16px",fontSize:11,fontWeight:900,letterSpacing:"0.15em",cursor:"pointer",fontFamily:BLACK,fontStyle:"italic",width:"100%"},
+  // ── Claim prize sticky btn ───────────────────────────────────────────────
+  claimBtnWrap:{position:"fixed",bottom:64,left:0,right:0,padding:"0 16px",maxWidth:500,margin:"0 auto",zIndex:90},
+  claimBtn:{width:"100%",background:ACCENT,color:ACCENT_DARK,border:"none",padding:"16px",fontSize:14,fontWeight:800,letterSpacing:"0.08em",cursor:"pointer",fontFamily:JOST,boxShadow:`0 6px 24px rgba(255,229,0,0.45)`,borderRadius:14,textTransform:"uppercase"},
 
-  submitFooter:{margin:"24px 16px 0",background:"#000",border:`1px solid ${EDGE}`,borderLeft:`3px solid ${ACCENT}`,padding:"18px 20px",display:"flex",alignItems:"center",gap:16},
-  submitHeading:{fontSize:13,fontWeight:900,color:ACCENT,letterSpacing:"0.15em",fontFamily:BLACK,marginBottom:4,fontStyle:"italic"},
-  submitSub:{fontSize:12,color:DIM,fontFamily:MONO,lineHeight:1.4},
-
-  // Leaderboard
-  lbMyCard:{background:CARD,borderBottom:`1px solid ${EDGE}`,padding:"20px 18px",display:"flex",alignItems:"center",justifyContent:"space-between"},
+  // ── Leaderboard ───────────────────────────────────────────────────────────
+  lbMyCard:{background:"#1C1C1E",margin:"16px",borderRadius:16,padding:"20px 18px",display:"flex",alignItems:"center",justifyContent:"space-between",boxShadow:"0 8px 32px rgba(0,0,0,0.15)"},
   lbMyLeft:{display:"flex",alignItems:"center",gap:14},
-  lbMyRank:{fontSize:28,fontWeight:900,color:ACCENT,fontFamily:BLACK,minWidth:44},
-  lbMyName:{fontSize:16,fontWeight:900,color:WHITE,fontFamily:BLACK,letterSpacing:"-0.01em"},
-  lbMyPts:{fontSize:11,color:DIM,fontFamily:MONO,marginTop:2},
-  lbMyBadge:{background:ACCENT,color:"#000",textAlign:"center",padding:"8px 14px",fontStyle:"italic"},
-  lbMyBadgeNum:{fontSize:20,fontWeight:900,lineHeight:1,fontFamily:BLACK},
-  lbMyBadgeLbl:{fontSize:9,fontWeight:700,letterSpacing:"0.2em"},
-
-  prizeList:{padding:"0 16px",display:"flex",flexDirection:"column",gap:6},
-  prizeTierRow:{display:"flex",alignItems:"center",gap:10,background:CARD,border:`1px solid ${EDGE}`,padding:"12px 14px"},
-  prizeTierUnlocked:{background:"#111000",border:`1px solid #2a2200`},
+  lbMyRank:{fontSize:28,fontWeight:900,color:ACCENT,fontFamily:JOST,minWidth:44},
+  lbMyName:{fontSize:16,fontWeight:800,color:"#FFF",fontFamily:JOST,letterSpacing:"-0.01em"},
+  lbMyPts:{fontSize:12,color:"rgba(255,255,255,0.4)",fontFamily:JOST,marginTop:2},
+  lbMyBadge:{background:ACCENT,color:ACCENT_DARK,textAlign:"center",padding:"10px 16px",borderRadius:12},
+  lbMyBadgeNum:{fontSize:22,fontWeight:900,lineHeight:1,fontFamily:JOST},
+  lbMyBadgeLbl:{fontSize:9,fontWeight:700,letterSpacing:"0.2em",textTransform:"uppercase"},
+  prizeList:{padding:"0 16px",display:"flex",flexDirection:"column",gap:8},
+  prizeTierRow:{display:"flex",alignItems:"center",gap:12,background:CARD,borderRadius:12,padding:"12px 14px",boxShadow:SHADOW},
+  prizeTierUnlocked:{background:"#F5FFF0",border:"1px solid rgba(52,199,89,0.2)"},
   prizeTierIcon:{fontSize:20,width:26,textAlign:"center",flexShrink:0},
   prizeTierBody:{flex:1},
-  prizeTierName:{fontSize:13,fontWeight:700,color:WHITE,fontFamily:BLACK,letterSpacing:"0.04em"},
-  prizeTierDesc:{fontSize:10,color:DIM,fontFamily:MONO,marginTop:1},
-  prizeTierPts:{fontSize:11,fontWeight:700,color:DIM,fontFamily:MONO},
-  prizeTierPtsOn:{color:ACCENT,fontStyle:"italic"},
-  prizeTierCheck:{color:ACCENT,fontWeight:900,fontSize:16,paddingLeft:6},
-
-  lbList:{padding:"0 16px",display:"flex",flexDirection:"column",gap:6},
-  lbRow:{display:"flex",alignItems:"center",gap:12,background:CARD,border:`1px solid ${EDGE}`,padding:"12px 14px"},
-  lbRowMe:{background:"#111000",border:`1px solid ${ACCENT}`},
-  lbRank:{width:28,textAlign:"center",fontSize:15,fontWeight:900,color:DIM,fontFamily:BLACK,flexShrink:0},
-  lbInitials:{width:36,height:36,borderRadius:"50%",background:EDGE,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:900,color:WHITE,fontFamily:BLACK,flexShrink:0},
+  prizeTierName:{fontSize:14,fontWeight:700,color:TEXT1,fontFamily:JOST,letterSpacing:"-0.01em"},
+  prizeTierDesc:{fontSize:11,color:TEXT2,fontFamily:JOST,marginTop:1},
+  prizeTierPts:{fontSize:12,fontWeight:700,color:TEXT3,fontFamily:JOST},
+  prizeTierPtsOn:{color:"#34C759",fontWeight:800},
+  prizeTierCheck:{color:"#34C759",fontWeight:900,fontSize:18,paddingLeft:4},
+  lbList:{padding:"0 16px",display:"flex",flexDirection:"column",gap:8},
+  lbRow:{display:"flex",alignItems:"center",gap:12,background:CARD,borderRadius:12,padding:"12px 14px",boxShadow:SHADOW},
+  lbRowMe:{background:"#1C1C1E",boxShadow:"0 4px 20px rgba(0,0,0,0.15)"},
+  lbRank:{width:28,textAlign:"center",fontSize:15,fontWeight:700,color:TEXT3,fontFamily:JOST,flexShrink:0},
+  lbInitials:{width:36,height:36,borderRadius:"50%",background:BG,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700,color:TEXT1,fontFamily:JOST,flexShrink:0},
   lbEntryBody:{flex:1},
-  lbEntryName:{fontSize:13,fontWeight:700,color:WHITE,fontFamily:BLACK,letterSpacing:"0.04em"},
-  lbEntryPrize:{fontSize:10,color:DIM,fontFamily:MONO,marginTop:2},
-  lbEntryPts:{fontSize:18,fontWeight:900,color:DIM,fontFamily:BLACK},
-  lbEmpty:{padding:"24px",textAlign:"center",color:DIM,fontSize:12,fontFamily:MONO},
+  lbEntryName:{fontSize:14,fontWeight:700,color:TEXT1,fontFamily:JOST,letterSpacing:"-0.01em"},
+  lbEntryPrize:{fontSize:11,color:TEXT2,fontFamily:JOST,marginTop:2},
+  lbEntryPts:{fontSize:20,fontWeight:900,color:TEXT1,fontFamily:JOST},
+  lbEmpty:{padding:"32px 24px",textAlign:"center",color:TEXT3,fontSize:14,fontFamily:JOST},
 
-  // Claim prizes
-  claimSummary:{margin:"0 16px 16px",background:"#111000",border:`1px solid ${ACCENT}`,padding:"20px",textAlign:"center"},
-  claimSummaryPts:{fontSize:32,fontWeight:900,color:ACCENT,fontFamily:BLACK,letterSpacing:"-0.02em"},
-  claimSummaryPrize:{fontSize:18,fontWeight:900,color:WHITE,fontFamily:BLACK,marginTop:4},
-  claimSummaryDesc:{fontSize:12,color:DIM,fontFamily:MONO,marginTop:4},
-  claimTierRow:{display:"flex",alignItems:"center",gap:8,padding:"8px 12px",borderBottom:`1px solid ${EDGE}`},
-
-  pinHeader:{padding:"20px 24px 12px",textAlign:"center"},
-  bigIcon:{fontSize:44,marginBottom:10},
-  voteSection:{padding:"0 24px 12px"},
-  voteCats:{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"},
-  voteCatBtn:{background:"none",border:`1px solid ${EDGE}`,color:DIM,padding:"8px 14px",fontSize:11,fontFamily:MONO,letterSpacing:"0.1em",cursor:"pointer"},
-  voteCatOn:{border:`1px solid ${ACCENT}`,color:ACCENT,background:"#111000"},
-  voteSelect:{width:"100%",background:CARD,border:`1px solid ${EDGE}`,color:WHITE,padding:"13px 14px",fontSize:14,fontFamily:SANS,outline:"none",boxSizing:"border-box",borderRadius:0,marginBottom:8,appearance:"auto"},
-  voteHint:{fontSize:11,color:"#ff9900",fontFamily:MONO,marginBottom:8},
-  dots:{display:"flex",justifyContent:"center",gap:18,padding:"16px 0 8px"},
-  dot:{width:16,height:16,borderRadius:"50%",border:`2px solid ${DIM2}`,background:"transparent",transition:"background 0.15s"},
-  dotFilled:{background:ACCENT,borderColor:ACCENT},
-  numpad:{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:2,padding:"0 24px",maxWidth:320,margin:"0 auto"},
-  numpadOff:{opacity:0.35,pointerEvents:"none"},
-  numKey:{background:CARD,border:`1px solid ${EDGE}`,color:WHITE,fontSize:22,padding:"18px 0",cursor:"pointer",fontFamily:SANS,fontWeight:700},
-  numBlank:{background:"transparent",border:"none",cursor:"default"},
-
-  centre:{minHeight:"100vh",background:"#000",color:WHITE,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"40px 24px",fontFamily:SANS,textAlign:"center",maxWidth:500,margin:"0 auto"},
-  stampCircle:{width:72,height:72,borderRadius:0,background:ACCENT,color:"#000",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,fontWeight:900,marginBottom:20,fontStyle:"italic",fontFamily:BLACK},
-  bigWord:{fontSize:"clamp(40px,12vw,60px)",fontWeight:900,letterSpacing:"-0.03em",color:WHITE,fontFamily:BLACK,marginBottom:8,fontStyle:"italic"},
-  successLabel:{fontSize:15,color:DIM,marginBottom:16,fontFamily:MONO,letterSpacing:"0.05em"},
-  successPts:{fontSize:20,color:ACCENT,fontWeight:700,marginBottom:4,fontFamily:BLACK},
-  successTotal:{fontSize:12,color:DIM,marginBottom:32,fontFamily:MONO},
-  drawNote:{color:DIM,fontSize:13,lineHeight:1.8,marginBottom:32,maxWidth:300},
-  closeBtn:{marginTop:8,background:"transparent",border:`2px solid ${WHITE}`,color:WHITE,padding:"16px 48px",fontSize:16,fontWeight:900,letterSpacing:"0.2em",cursor:"pointer",fontFamily:BLACK,fontStyle:"italic"},
-
-  // Explore
-  exploreHero:{background:"#000",borderBottom:`1px solid ${EDGE}`,padding:"28px 20px 24px"},
-  exploreHeroEye:{fontSize:10,letterSpacing:"0.35em",color:ACCENT,fontFamily:MONO,marginBottom:8},
-  exploreHeroTitle:{fontSize:"clamp(32px,9vw,48px)",fontWeight:900,color:WHITE,fontFamily:BLACK,letterSpacing:"-0.04em",lineHeight:0.95,marginBottom:10,fontStyle:"italic"},
-  exploreHeroSub:{fontSize:13,color:DIM,fontFamily:MONO,lineHeight:1.6},
+  // ── Explore ───────────────────────────────────────────────────────────────
+  exploreHero:{background:"#1C1C1E",margin:"0",padding:"28px 20px 24px"},
+  exploreHeroEye:{fontSize:10,color:ACCENT,letterSpacing:"0.3em",fontFamily:MONO,marginBottom:10,textTransform:"uppercase"},
+  exploreHeroTitle:{fontSize:"clamp(28px,8vw,40px)",fontWeight:900,color:"#FFF",fontFamily:JOST,letterSpacing:"-0.04em",lineHeight:1,marginBottom:10,fontStyle:"italic"},
+  exploreHeroSub:{fontSize:14,color:"rgba(255,255,255,0.45)",fontFamily:JOST,lineHeight:1.6,fontWeight:400},
   exploreList:{padding:"16px 16px 0",display:"flex",flexDirection:"column",gap:12},
-  exploreCard:{background:CARD,border:`1px solid ${EDGE}`,overflow:"hidden",display:"flex"},
-  exploreCardAccent:{width:4,flexShrink:0},
+  exploreCard:{background:CARD,borderRadius:16,overflow:"hidden",display:"flex",boxShadow:SHADOW},
+  exploreCardAccent:{width:5,flexShrink:0},
   exploreCardInner:{flex:1,padding:"16px 14px"},
   exploreCardTop:{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8},
-  exploreCardIcon:{fontSize:24},
-  exploreBadge:{fontSize:9,fontWeight:700,letterSpacing:"0.25em",fontFamily:MONO,border:"1px solid",padding:"3px 8px"},
-  exploreCardTag:{fontSize:10,color:DIM,letterSpacing:"0.2em",fontFamily:MONO,marginBottom:4},
-  exploreCardTitle:{fontSize:18,fontWeight:900,color:WHITE,fontFamily:BLACK,letterSpacing:"-0.01em",marginBottom:6},
-  exploreCardDesc:{fontSize:12,color:DIM,lineHeight:1.6,fontFamily:MONO},
+  exploreCardIcon:{fontSize:22},
+  exploreBadge:{fontSize:9,fontWeight:700,letterSpacing:"0.2em",fontFamily:JOST,border:"1.5px solid",padding:"3px 9px",borderRadius:20,textTransform:"uppercase"},
+  exploreCardTag:{fontSize:10,color:TEXT3,letterSpacing:"0.15em",fontFamily:JOST,marginBottom:4,textTransform:"uppercase",fontWeight:600},
+  exploreCardTitle:{fontSize:17,fontWeight:800,color:TEXT1,fontFamily:JOST,letterSpacing:"-0.02em",marginBottom:6},
+  exploreCardDesc:{fontSize:13,color:TEXT2,lineHeight:1.6,fontFamily:JOST,fontWeight:400},
+
+  // ── PIN screen ────────────────────────────────────────────────────────────
+  pinHeader:{padding:"24px 24px 12px",textAlign:"center"},
+  bigIcon:{fontSize:48,marginBottom:12},
+  voteSection:{padding:"0 24px 12px"},
+  voteCats:{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"},
+  voteCatBtn:{background:CARD,border:`1.5px solid ${EDGE}`,color:TEXT2,padding:"9px 16px",fontSize:12,fontFamily:JOST,letterSpacing:"0.05em",cursor:"pointer",borderRadius:20,fontWeight:500},
+  voteCatOn:{border:`1.5px solid ${TEXT1}`,color:TEXT1,background:BG,fontWeight:700},
+  voteSelect:{width:"100%",background:CARD,border:`1.5px solid ${EDGE}`,color:TEXT1,padding:"13px 14px",fontSize:14,fontFamily:JOST,outline:"none",boxSizing:"border-box",borderRadius:12,marginBottom:8,appearance:"auto"},
+  voteHint:{fontSize:12,color:"#FF9500",fontFamily:JOST,marginBottom:8},
+  dots:{display:"flex",justifyContent:"center",gap:20,padding:"20px 0 10px"},
+  dot:{width:14,height:14,borderRadius:"50%",border:`2px solid ${EDGE}`,background:"transparent",transition:"all 0.15s"},
+  dotFilled:{background:TEXT1,borderColor:TEXT1,transform:"scale(1.15)"},
+  numpad:{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:3,padding:"0 20px",maxWidth:340,margin:"0 auto"},
+  numpadOff:{opacity:0.3,pointerEvents:"none"},
+  numKey:{background:CARD,border:`1px solid ${EDGE}`,color:TEXT1,fontSize:24,padding:"20px 0",cursor:"pointer",fontFamily:JOST,fontWeight:600,borderRadius:12,boxShadow:"0 1px 4px rgba(0,0,0,0.06)"},
+  numBlank:{background:"transparent",border:"none",cursor:"default",boxShadow:"none"},
+
+  // ── Claim prizes ──────────────────────────────────────────────────────────
+  claimSummary:{margin:"0 16px 16px",background:"#1C1C1E",borderRadius:16,padding:"24px",textAlign:"center",boxShadow:"0 8px 32px rgba(0,0,0,0.12)"},
+  claimSummaryPts:{fontSize:40,fontWeight:900,color:ACCENT,fontFamily:JOST,letterSpacing:"-0.04em"},
+  claimSummaryPrize:{fontSize:20,fontWeight:800,color:"#FFF",fontFamily:JOST,marginTop:4,letterSpacing:"-0.02em"},
+  claimSummaryDesc:{fontSize:13,color:"rgba(255,255,255,0.45)",fontFamily:JOST,marginTop:4},
+  claimTierRow:{display:"flex",alignItems:"center",gap:10,padding:"10px 0",borderBottom:`1px solid ${EDGE}`},
+
+  // ── Success / Centre screens ──────────────────────────────────────────────
+  centre:{minHeight:"100vh",background:BG,color:TEXT1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"40px 24px",fontFamily:JOST,textAlign:"center",maxWidth:500,margin:"0 auto"},
+  stampCircle:{width:80,height:80,borderRadius:24,background:ACCENT,color:ACCENT_DARK,display:"flex",alignItems:"center",justifyContent:"center",fontSize:32,fontWeight:900,marginBottom:20,boxShadow:`0 8px 32px rgba(255,229,0,0.4)`,fontFamily:JOST},
+  bigWord:{fontSize:"clamp(44px,13vw,64px)",fontWeight:900,letterSpacing:"-0.04em",color:TEXT1,fontFamily:JOST,marginBottom:8,fontStyle:"italic"},
+  successLabel:{fontSize:15,color:TEXT2,marginBottom:16,fontFamily:JOST,fontWeight:400},
+  successPts:{fontSize:22,color:TEXT1,fontWeight:800,marginBottom:4,fontFamily:JOST},
+  successTotal:{fontSize:13,color:TEXT3,marginBottom:32,fontFamily:JOST},
+  drawNote:{color:TEXT2,fontSize:14,lineHeight:1.8,marginBottom:32,maxWidth:300,fontFamily:JOST,fontWeight:400},
+  closeBtn:{marginTop:8,background:"transparent",border:`2px solid ${EDGE}`,color:TEXT2,padding:"16px 48px",fontSize:15,fontWeight:700,letterSpacing:"0.08em",cursor:"pointer",fontFamily:JOST,borderRadius:14,textTransform:"uppercase"},
+
+  // ── Vendor legacy (kept for compatibility) ───────────────────────────────
+  vendorRow:{display:"flex",alignItems:"center",gap:12,background:CARD,padding:"14px",cursor:"pointer"},
+  vendorDone:{background:CARD2,opacity:0.7},
+  vendorDot:{width:10,height:10,borderRadius:"50%",border:"2px solid",flexShrink:0,marginTop:2},
+  vendorBody:{flex:1,minWidth:0},
+  vendorName:{fontSize:14,fontWeight:700,color:TEXT1,fontFamily:JOST,marginBottom:2},
+  vendorAction:{fontSize:12,color:TEXT2,fontFamily:JOST},
 };
