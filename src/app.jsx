@@ -582,7 +582,7 @@ function CategoryScreen({cat, vendorStamps, vendorUploads, onSaveVendorUpload, o
 
               {/* Content */}
               <div style={S.vBody}>
-                <div style={{...S.vName, color: done ? "#666" : WHITE}}>{vendor.name}</div>
+                <div style={{...S.vName, color: done ? "#aaa" : TEXT1}}>{vendor.name}</div>
                 <div style={S.vAction}>{vendor.action}</div>
 
                 {/* Upload flow for Red Bull / hasUpload vendors */}
