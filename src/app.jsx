@@ -25,13 +25,13 @@ const CARS = ["— Select a car —","Car #1 — TBA","Car #2 — TBA","Car #3 �
 
 // ─── PRIZE TIERS ─────────────────────────────────────────────────────────────
 const PRIZES = [
-  { pts:9,  label:"Decal",     desc:"UU White Decal",                                    icon:"🏷️"  },
-  { pts:12, label:"Air Freshener", desc:"Unmarked Air Freshener",                        icon:"🌿"  },
-  { pts:15, label:"Decal",     desc:"Logo White Decal",                                  icon:"🏷️"  },
-  { pts:18, label:"Jet Tag",   desc:"Unmarked Jet Tag",                                  icon:"🔑"  },
-  { pts:24, label:"Lanyard",   desc:"Unmarked Lanyard",                                  icon:"📿"  },
-  { pts:30, label:"Key Ring",  desc:"Unmarked Key Ring",                                 icon:"🗝️"  },
-  { pts:36, label:"Showbag",   desc:"Hat, Air Freshener, Decal, Coupons & Tote Bag",    icon:"🎁"  },
+  { pts:9,  label:"Decal",        desc:"Unmarked Monogram Decal",                          icon:"🏷️", price:"$8",  img:"https://unmarked.au/cdn/shop/files/Monogramdecal.jpg?v=1782632156",  url:"https://unmarked.au/products/unmarked-monogram-decal" },
+  { pts:12, label:"Air Freshener",desc:"Unmarked Air Freshener",                           icon:"🌿", price:"$12", img:null, url:null },
+  { pts:15, label:"Decal",        desc:"Unmarked Logo Decal",                              icon:"🏷️", price:"$8",  img:"https://unmarked.au/cdn/shop/files/18.jpg?v=1782631701",             url:"https://unmarked.au/products/unmarked-logo-decal-1" },
+  { pts:18, label:"Jet Tag",      desc:"Unmarked Jet Tag",                                 icon:"🔑", price:"$15", img:"https://unmarked.au/cdn/shop/files/13.jpg?v=1782629675",             url:"https://unmarked.au/products/unmarked-jet-tag" },
+  { pts:24, label:"Lanyard",      desc:"Unmarked Trio Monogram Lanyard",                   icon:"📿", price:"$20", img:"https://unmarked.au/cdn/shop/files/26lanyard.png?v=1782629831",       url:"https://unmarked.au/products/unmel26-lanyard" },
+  { pts:30, label:"Key Ring",     desc:"Unmarked Key Chain",                               icon:"🗝️", price:"$30", img:"https://unmarked.au/cdn/shop/files/keychain.jpg?v=1782630519",       url:"https://unmarked.au/products/unmarked-key-chain" },
+  { pts:36, label:"Showbag",      desc:"Hat, Air Freshener, Decal, Coupons & Tote Bag",   icon:"🎁", price:"$80+", img:null, url:"https://unmarked.au/pages/unmarked-webstore" },
 ];
 
 function getPrize(pts) {
@@ -508,13 +508,20 @@ function LeaderboardTab({currentUser, currentPoints, leaderboard}) {
           const unlocked = currentPoints >= p.pts;
           return (
             <div key={p.pts} style={{...S.prizeTierRow,...(unlocked?S.prizeTierUnlocked:{})}}>
-              <div style={S.prizeTierIcon}>{p.icon}</div>
+              {/* Product image or emoji placeholder */}
+              {p.img
+                ? <img src={p.img} alt={p.label} style={{...S.prizeTierImg,...(!unlocked?{filter:"grayscale(1)",opacity:0.4}:{})}}/>
+                : <div style={S.prizeTierImgPlaceholder}><span style={{opacity:unlocked?1:0.3}}>{p.icon}</span></div>
+              }
               <div style={S.prizeTierBody}>
-                <div style={S.prizeTierName}>{p.label}</div>
+                <div style={{...S.prizeTierName,...(!unlocked?{color:TEXT3}:{})}}>{p.label}</div>
                 <div style={S.prizeTierDesc}>{p.desc}</div>
+                {p.price && <div style={S.prizeTierPrice}>{unlocked?"✓ Unlocked":"Valued at "}{!unlocked && <span style={{fontWeight:700,color:TEXT1}}>{p.price}</span>}</div>}
               </div>
-              <div style={{...S.prizeTierPts,...(unlocked?S.prizeTierPtsOn:{})}}>{p.pts}pts</div>
-              {unlocked && <div style={S.prizeTierCheck}>✓</div>}
+              <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:4}}>
+                <div style={{...S.prizeTierPts,...(unlocked?S.prizeTierPtsOn:{})}}>{p.pts}pts</div>
+                {p.url && <a href={p.url} target="_blank" rel="noreferrer" style={{fontSize:10,color:TEXT3,fontFamily:JOST,textDecoration:"none",letterSpacing:"0.05em"}}>view →</a>}
+              </div>
             </div>
           );
         })}
@@ -1345,10 +1352,13 @@ const S = {
   prizeList:{padding:"0 16px",display:"flex",flexDirection:"column",gap:8},
   prizeTierRow:{display:"flex",alignItems:"center",gap:12,background:CARD,borderRadius:12,padding:"12px 14px",boxShadow:SHADOW},
   prizeTierUnlocked:{background:"#F5FFF0",border:"1px solid rgba(52,199,89,0.2)"},
+  prizeTierImg:{width:52,height:52,objectFit:"cover",borderRadius:8,flexShrink:0,background:BG},
+  prizeTierImgPlaceholder:{width:52,height:52,borderRadius:8,flexShrink:0,background:BG,display:"flex",alignItems:"center",justifyContent:"center",fontSize:22},
   prizeTierIcon:{fontSize:20,width:26,textAlign:"center",flexShrink:0},
   prizeTierBody:{flex:1},
   prizeTierName:{fontSize:14,fontWeight:700,color:TEXT1,fontFamily:JOST,letterSpacing:"-0.01em"},
   prizeTierDesc:{fontSize:11,color:TEXT2,fontFamily:JOST,marginTop:1},
+  prizeTierPrice:{fontSize:12,fontWeight:700,color:TEXT3,fontFamily:JOST,marginTop:2},
   prizeTierPts:{fontSize:12,fontWeight:700,color:TEXT3,fontFamily:JOST},
   prizeTierPtsOn:{color:"#34C759",fontWeight:800},
   prizeTierCheck:{color:"#34C759",fontWeight:900,fontSize:18,paddingLeft:4},
