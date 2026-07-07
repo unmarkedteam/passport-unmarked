@@ -33,134 +33,97 @@ function getNextPrize(pts) {
 // ─── VENDOR CATEGORIES ───────────────────────────────────────────────────────
 const VENDOR_CATEGORIES = [
   {
-    id:"fashion", label:"Fashion Vendors", icon:"👗",
-    desc:"Make any purchase — 3 pts per vendor",
-    rule:"One stamp per vendor per passport holder", color:"#C8FF00",
+    id:"fashion", label:"Fashion", icon:"👗",
+    desc:"Make a purchase or participate — 3 pts per vendor",
+    rule:"One stamp per action per passport holder", color:"#FFE500",
     vendors:[
-      { id:"ikigai",           name:"IKIGAI GARAGE",                  pin:"7788", points:3, action:"Make a purchase" },
-      { id:"taped",            name:"TAPED",                           pin:"6405", points:3, action:"Make a purchase" },
-      { id:"jdmnation",        name:"JDM NATION",                     pin:"9671", points:3, action:"Make a purchase" },
-      { id:"trill",            name:"TRILL CLOTHING",                  pin:"7551", points:3, action:"Make a purchase" },
-      { id:"milomachines",     name:"MILO'S ADVENTURES",              pin:"2119", points:3, action:"Make a purchase" },
-      { id:"downforced",       name:"DOWNFORCED STREETWEAR",          pin:"9966", points:3, action:"Make a purchase" },
-      { id:"arqive",           name:"ARQIVE",                          pin:"9257", points:3, action:"Make a purchase" },
-      { id:"unmarked",         name:"UNMARKED",                        pin:"4837", points:3, action:"Make a purchase" },
-      { id:"miju",             name:"MIJU JEWELLERY",                  pin:"4990", points:3, action:"Make a purchase" },
-      { id:"emptystudio_buy",  name:"EMPTY STUDIOS",                  pin:"7739", points:3, action:"Make a purchase" },
-      { id:"emptystudio_logo", name:'EMPTY STUDIOS — "UNMARKED" BAG', pin:"7236", points:1, action:'Have "UNMARKED" printed on your Empty Studios bag (+1 bonus pt)' },
+      { id:"unmarked_purchase", name:"UNMARKED",                    pin:"2750", points:3, action:"Make a purchase" },
+      { id:"unmarked_punch",    name:"UNMARKED — PUNCH MACHINE",    pin:"6627", points:2, action:"Play the punch machine" },
+      { id:"krave",             name:"KRAVE",                       pin:"1997", points:3, action:"Make a purchase" },
+      { id:"emptystudios",      name:"EMPTY STUDIOS",               pin:"4361", points:3, action:"Make a purchase" },
+      { id:"jdmnation",         name:"JDM NATION",                  pin:"8765", points:3, action:"Make a purchase" },
+      { id:"incompletegl",      name:"INCOMPLETEGL",                pin:"4645", points:3, action:"Make a purchase" },
+      { id:"miloadventures",    name:"MILO ADVENTURES",             pin:"7667", points:3, action:"Make a purchase" },
+      { id:"pitviper_purchase", name:"PIT VIPER AUSTRALIA",         pin:"7429", points:3, action:"Make a purchase" },
+      { id:"pitviper_selfie",   name:"PIT VIPER — SELFIE",          pin:"9710", points:2, action:"Take a selfie wearing Pit Vipers" },
+      { id:"riderszn",          name:"RIDERSZN",                    pin:"5877", points:3, action:"Make a purchase" },
     ],
   },
   {
-    id:"diecast", label:"Diecasts & Collectables", icon:"🚗",
-    desc:"Make any purchase — 3 pts per vendor",
-    rule:"One stamp per vendor per passport holder", color:"#FF9900",
-    vendors:[
-      { id:"southerndiecast", name:"SOUTHERN DIECAST",         pin:"1408", points:3, action:"Make a purchase" },
-      { id:"ozdiecast",       name:"OZDIECAST FANATICS",        pin:"2577", points:3, action:"Make a purchase" },
-      { id:"minigarage",      name:"MINI GARAGE COLLECTABLES",  pin:"6834", points:3, action:"Make a purchase" },
-      { id:"jpnbricks",       name:"JPNBRICKS",                 pin:"5001", points:3, action:"Make a purchase" },
-      { id:"drivedeck",       name:"DRIVE DECK",                pin:"9056", points:3, action:"Make a purchase" },
-    ],
-  },
-  {
-    id:"services", label:"Services, Activities & Giveaways", icon:"⚡",
-    desc:"Get a quote, enter a raffle or participate",
-    rule:"One stamp per vendor per passport holder", color:"#00CFFF",
-    vendors:[
-      { id:"plus08_quote",  name:"PLUS08",               pin:"2538", points:3, action:"Get a quote" },
-      { id:"nextlevel",     name:"NEXT LEVEL PAINTBALL",  pin:"7905", points:3, action:"Get a quote" },
-      { id:"dreamhome",     name:"DREAM HOME ART UNION",  pin:"8757", points:3, action:"Purchase a raffle" },
-      { id:"opulent_svc",   name:"TEAM OPULENT",          pin:"4325", points:3, action:"Get a quote" },
-      { id:"staticgarage",  name:"STATIC GARAGE",         pin:"2672", points:3, action:"Get a quote" },
-    ],
-  },
-  {
-    id:"sampling", label:"Sample a Product", icon:"🍺",
-    desc:"Try a sample — must meet age requirements",
-    rule:"One stamp per vendor per passport holder", color:"#FF4D6D",
-    vendors:[
-      { id:"jerky", name:"HEAVENLY BEEF JERKY",      pin:"9440", points:3, action:"Try a sample" },
-      { id:"scout", name:"SCOUT BREWING (18+ only)", pin:"7698", points:3, action:"Try a beverage — must be 18+" },
-    ],
-  },
-  {
-    id:"detailing", label:"Car Detailing & Products", icon:"✨",
-    desc:"Make a purchase or participate",
+    id:"carcare", label:"Car Care & Air Fresheners", icon:"✨",
+    desc:"Make a purchase — 3 pts per vendor",
     rule:"One stamp per action per passport holder", color:"#B06EFF",
     vendors:[
-      { id:"snowfoam",        name:"SNOW FOAM AUSTRALIA",    pin:"4396", points:3, action:"Make a purchase" },
-      { id:"artdeshine_buy",  name:"ARTDESHINE",             pin:"4771", points:3, action:"Make a purchase" },
-      { id:"artdeshine_sim",  name:"ARTDESHINE — SIMULATOR", pin:"3703", points:2, action:"Play the simulator" },
-      { id:"nasiol",          name:"NASIOL",                 pin:"2337", points:3, action:"Make a purchase" },
-      { id:"opulent_detail",  name:"OPULENT DETAILING",      pin:"4053", points:3, action:"Get a quote" },
+      { id:"snowfoam",           name:"SNOW FOAM AUSTRALIA",  pin:"8379", points:3, action:"Make a purchase" },
+      { id:"artdeshine_purchase",name:"ARTDESHINE",            pin:"1613", points:3, action:"Make a purchase" },
+      { id:"artdeshine_sim",     name:"ARTDESHINE — SIMULATOR",pin:"3635", points:2, action:"Play on the simulator" },
+      { id:"luxescents",         name:"LUXE SCENTS",           pin:"7201", points:3, action:"Make a purchase" },
+      { id:"scentstation",       name:"SCENT STATION",         pin:"1180", points:3, action:"Make a purchase" },
     ],
   },
   {
-    id:"scents", label:"Car Scents", icon:"🌿",
+    id:"accessories", label:"Car Accessories", icon:"🔧",
     desc:"Make a purchase — 3 pts per vendor",
-    rule:"One stamp per vendor per passport holder", color:"#FFD700",
+    rule:"One stamp per vendor per passport holder", color:"#00CFFF",
     vendors:[
-      { id:"luxescents", name:"LUXE SCENTS", pin:"4822", points:3, action:"Make a purchase" },
-      { id:"fatass",     name:"F@T @SS",     pin:"9557", points:3, action:"Make a purchase" },
+      { id:"darlingful",   name:"DARLINGFUL",   pin:"5982", points:3, action:"Make a purchase" },
+      { id:"yohyonko",     name:"YOHYONKO!",    pin:"7118", points:3, action:"Make a purchase" },
+      { id:"drivedeck",    name:"DRIVEDECK",    pin:"9216", points:3, action:"Make a purchase" },
+      { id:"carbonetics",  name:"CARBONETICS",  pin:"2977", points:3, action:"Make a purchase" },
     ],
   },
   {
-    id:"memories", label:"Memories", icon:"🎩",
-    desc:"Create a memory to take home",
-    rule:"One stamp per vendor per passport holder", color:"#FF85A1",
+    id:"diecast", label:"Diecasts & Collectibles", icon:"🚗",
+    desc:"Make a purchase or participate — 3 pts per vendor",
+    rule:"One stamp per action per passport holder", color:"#FF9900",
     vendors:[
-      { id:"happycap", name:"HAPPY CAP STUDIOS", pin:"8595", points:3, action:"Create a memory — take home a photo" },
+      { id:"southerndiecast", name:"SOUTHERN DIECAST",       pin:"4192", points:3, action:"Make a purchase" },
+      { id:"jpnbricks",       name:"JPN BRICKS",             pin:"1701", points:3, action:"Make a purchase" },
+      { id:"minirc_play",     name:"MINI RC — PLAY",         pin:"8272", points:2, action:"Play with a Mini RC" },
+      { id:"minirc_purchase", name:"MINI RC — PURCHASE",     pin:"7092", points:3, action:"Make a purchase" },
+      { id:"diecastculture",  name:"DIECAST CULTURE",        pin:"5724", points:3, action:"Make a purchase" },
+      { id:"regaldiecast",    name:"REGAL DIECAST",          pin:"4745", points:3, action:"Make a purchase" },
     ],
   },
   {
-    id:"customise", label:"Customise", icon:"🎨",
-    desc:"Make a purchase or customisation",
-    rule:"One stamp per vendor per passport holder", color:"#00E5CC",
+    id:"photography", label:"Photography", icon:"📸",
+    desc:"Capture the moment",
+    rule:"One stamp per action per passport holder", color:"#FF85A1",
     vendors:[
-      { id:"yohyonko", name:"YOHYONKO!", pin:"9680", points:3, action:"Make a purchase" },
+      { id:"happycap",      name:"HAPPY CAP STUDIOS", pin:"1442", points:3, action:"Capture the moment — take home a photo" },
+      { id:"lumix_rent",    name:"LUMIX — RENT A CAMERA",     pin:"6819", points:3, action:"Rent a LUMIX camera" },
+      { id:"lumix_workshop",name:"LUMIX — BODYWORK WORKSHOP", pin:"1071", points:3, action:"Join the BODYWORK Workshop" },
     ],
   },
   {
-    id:"lumix", label:"LUMIX", icon:"📸",
-    desc:"Rent a camera or join a Creator Session",
-    rule:"One stamp per action per passport holder", color:"#3399FF",
-    vendors:[
-      { id:"lumix_rent",    name:"LUMIX — CAMERA RENTAL",               pin:"5211", points:3, action:"Rent a LUMIX camera" },
-      { id:"lumix_session", name:"LUMIX — LAAG MEDIA CREATOR SESSION",  pin:"3554", points:2, action:"Join the 1PM or 4PM Creator Session" },
-    ],
-  },
-  {
-    id:"shannons", label:"Shannons", icon:"🏁",
+    id:"insurance", label:"Insurance", icon:"🏁",
     desc:"Get a quote or play the sim",
     rule:"One stamp per action per passport holder", color:"#FF6B00",
     vendors:[
-      { id:"shannons_quote", name:"SHANNONS — GET A QUOTE", pin:"1752", points:3, action:"Get a Shannons insurance quote" },
-      { id:"shannons_sim",   name:"SHANNONS — RACING SIM",  pin:"3582", points:2, action:"Play the racing simulator" },
+      { id:"shannons_quote", name:"SHANNONS — GET A QUOTE",   pin:"6380", points:3, action:"Get a Shannons insurance quote" },
+      { id:"shannons_sim",   name:"SHANNONS — RACING SIM",    pin:"5091", points:2, action:"Play the racing simulator" },
     ],
   },
   {
-    id:"food", label:"Food & Drink Vendors", icon:"🍔",
-    desc:"Make any food or drink purchase — 3 pts per vendor",
-    rule:"One stamp per vendor per passport holder", color:"#FF4500",
+    id:"experiences", label:"Experiences", icon:"⚡",
+    desc:"Participate in an experience",
+    rule:"One stamp per action per passport holder", color:"#00E5CC",
     vendors:[
-      { id:"loveyourhomie", name:"LOVE YOUR HOMIE",   pin:"2663", points:3, action:"Make a purchase" },
-      { id:"coffeejoyride", name:"COFFEE JOYRIDE",     pin:"2303", points:3, action:"Make a purchase" },
-      { id:"biggertexas",   name:"BIGGER THAN TEXAS",  pin:"4982", points:3, action:"Make a purchase" },
-      { id:"brothlramen",   name:"BROTHL RAMEN",       pin:"9719", points:3, action:"Make a purchase" },
-      { id:"tacostation",   name:"TACO STATION",       pin:"1540", points:3, action:"Make a purchase" },
-      { id:"acaismoothie",  name:"AÇAÍ & SMOOTHIE CO", pin:"9696", points:3, action:"Make a purchase" },
-      { id:"tornadospuds",  name:"TORNADO SPUDS",      pin:"3087", points:3, action:"Make a purchase" },
-      { id:"chillngrill",   name:"CHILL N' GRILL",     pin:"9420", points:3, action:"Make a purchase" },
-      { id:"loukoumades",   name:"776 BC LOUKOUMADES", pin:"8728", points:3, action:"Make a purchase" },
-      { id:"icecream",      name:"ICE CREAM DELIGHTS", pin:"9256", points:3, action:"Make a purchase" },
-      { id:"kebab2nite",    name:"KEBAB 2NITE",        pin:"5525", points:3, action:"Make a purchase" },
-      { id:"gelatoiskey",   name:"GELATO IS KEY",      pin:"5328", points:3, action:"Make a purchase" },
+      { id:"wheeliebros", name:"WHEELIE BROS — WHEELIE SIM", pin:"7778", points:3, action:"Ride the wheelie simulator" },
+    ],
+  },
+  {
+    id:"energydrinks", label:"Energy Drinks", icon:"🔴",
+    desc:"Take a photo with the Red Bull F1 Car",
+    rule:"Upload your photo then get it verified by staff", color:"#FF0028",
+    vendors:[
+      { id:"redbull", name:"RED BULL — F1 CAR PHOTO", pin:"4159", points:3, action:"Take a photo with the Red Bull F1 car — upload required", hasUpload:true },
     ],
   },
 ];
 
-const SOLO_TASKS = [
-  { id:"f1car",     label:"F1 Car Photo",          desc:"Take a photo with the Red Bull F1 car — upload your shot",              pin:"8888", points:2, icon:"🏎️", hasUpload:true },
+
+const SOLO_TASKSr",     label:"F1 Car Photo",          desc:"Take a photo with the Red Bull F1 car — upload your shot",              pin:"8888", points:2, icon:"🏎️", hasUpload:true },
   { id:"instagram", label:"Instagram Story",        desc:"Post a story on Instagram mentioning @unmarked.au — upload screenshot", pin:"8888", points:2, icon:"📱", hasUpload:true },
   { id:"favcar",    label:"Favourite Car Photo",    desc:"Take a photo of your favourite car — counts towards awards",            pin:"8888", points:2, icon:"⭐", hasUpload:true },
 ];
@@ -553,7 +516,7 @@ function LeaderboardTab({currentUser, currentPoints, leaderboard}) {
 }
 
 // ─── CATEGORY SCREEN ──────────────────────────────────────────────────────────
-function CategoryScreen({cat, vendorStamps, onVendor, onBack}) {
+function CategoryScreen({cat, vendorStamps, vendorUploads, onSaveVendorUpload, onVendor, onBack}) {
   return (
     <div style={S.screen}>
       <TopBar title={cat.label.toUpperCase()} onBack={onBack}/>
