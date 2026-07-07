@@ -520,8 +520,7 @@ function CategoryScreen({cat, vendorStamps, vendorUploads, onSaveVendorUpload, o
   return (
     <div style={S.screen}>
       <TopBar title={cat.label.toUpperCase()} onBack={onBack}/>
-      <div style={S.pad}>
-        <div style={{...S.catHeroBadge, borderColor:cat.color}}>
+      <div style={{...S.catHeroBadge, borderColor:cat.color}}>
           <span style={S.catHeroIcon}>{cat.icon}</span>
           <div>
             <Eyebrow color={cat.color}>POINTS VARY PER ACTION</Eyebrow>
@@ -529,21 +528,79 @@ function CategoryScreen({cat, vendorStamps, vendorUploads, onSaveVendorUpload, o
             <div style={S.catHeroRule}>{cat.rule}</div>
           </div>
         </div>
-      </div>
-      <div style={S.sectionLabel}>SELECT YOUR VENDOR</div>
-      <div style={S.taskList}>
+      <div style={{height:1,background:EDGE}}/>
+      <div style={S.vList}>
         {cat.vendors.map(vendor=>{
           const done = !!vendorStamps[vendor.id];
           return (
-            <div key={vendor.id} style={{...S.vendorRow,...(done?S.vendorDone:{})}} onClick={()=>!done&&onVendor(cat,vendor)}>
-              <div style={{...S.vendorDot, background:done?cat.color:"transparent", borderColor:done?cat.color:"#333"}}/>
-              <div style={S.vendorBody}>
-                <div style={S.vendorName}>{vendor.name}</div>
-                <div style={S.vendorAction}>{vendor.action}</div>
+            <div key={vendor.id}
+              style={{...S.vRow, ...(done ? S.vRowDone : {})}}
+              onClick={()=>!done && !vendor.hasUpload && onVendor(cat,vendor)}
+            >
+              {/* Status circle */}
+              <div style={{...S.vStatus, background: done ? cat.color : "transparent", borderColor: done ? cat.color : "#2a2a2a"}}>
+                {done && <span style={{color:"#000", fontSize:13, fontWeight:900}}>✓</span>}
               </div>
-              <div style={S.taskRight}>
-                <div style={{...S.taskPts,...(done?S.taskPtsDone:{})}}>{vendor.points}pt{vendor.points>1?"s":""}</div>
-                {done?<div style={S.checkStamp}>✓</div>:<div style={S.arrow}>›</div>}
+
+              {/* Content */}
+              <div style={S.vBody}>
+                <div style={{...S.vName, color: done ? "#666" : WHITE}}>{vendor.name}</div>
+                <div style={S.vAction}>{vendor.action}</div>
+
+                {/* Upload flow for Red Bull / hasUpload vendors */}
+                {vendor.hasUpload && !done && (
+                  <div style={{marginTop:12}}>
+                    {!vendorUploads?.[vendor.id] ? (
+                      <label style={S.vUploadBtn}>
+                        <input type="file" accept="image/*" style={{display:"none"}}
+                          onChange={e=>{
+                            const file=e.target.files[0]; if(!file) return;
+                            const reader=new FileReader();
+                            reader.onload=ev=>onSaveVendorUpload(vendor.id, ev.target.result);
+                            reader.readAsDataURL(file);
+                          }}
+                        />
+                        <span>📎  UPLOAD PHOTO</span>
+                      </label>
+                    ) : (
+                      <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                        <div style={{display:"flex",alignItems:"center",gap:12}}>
+                          <img src={vendorUploads[vendor.id]} alt="" style={{width:56,height:56,objectFit:"cover",borderRadius:4}}/>
+                          <div>
+                            <div style={{fontSize:12,color:ACCENT,fontFamily:MONO,letterSpacing:"0.08em",marginBottom:4}}>✓ Photo ready</div>
+                            <label style={{fontSize:11,color:"#555",fontFamily:MONO,cursor:"pointer"}}>
+                              <input type="file" accept="image/*" style={{display:"none"}}
+                                onChange={e=>{
+                                  const file=e.target.files[0]; if(!file) return;
+                                  const reader=new FileReader();
+                                  reader.onload=ev=>onSaveVendorUpload(vendor.id, ev.target.result);
+                                  reader.readAsDataURL(file);
+                                }}
+                              />
+                              ↺ Change photo
+                            </label>
+                          </div>
+                        </div>
+                        <button style={S.vStaffBtn} onClick={e=>{e.stopPropagation();onVendor(cat,vendor);}}>
+                          STAFF — VERIFY & STAMP
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Tap hint for normal vendors */}
+                {!vendor.hasUpload && !done && (
+                  <div style={S.vHint}>Tap to verify with vendor →</div>
+                )}
+              </div>
+
+              {/* Points + chevron */}
+              <div style={S.vRight}>
+                <div style={{...S.vPts, color: done ? "#555" : ACCENT}}>
+                  {vendor.points}<span style={{fontSize:10,fontWeight:400,color:"#555"}}> pts</span>
+                </div>
+                {!done && !vendor.hasUpload && <div style={S.vChevron}>›</div>}
               </div>
             </div>
           );
@@ -1163,12 +1220,13 @@ const S = {
   catProgressTrack:{flex:1,height:2,background:EDGE},
   catProgressFill:{height:"100%",transition:"width 0.4s ease"},
   catCount:{fontSize:10,color:DIM,fontFamily:MONO,whiteSpace:"nowrap",paddingRight:4},
-  catHeroBadge:{border:"1px solid",padding:"16px",display:"flex",gap:14,alignItems:"flex-start",marginBottom:8},
+  catHeroBadge:{border:"none",borderBottom:`1px solid ${EDGE}`,padding:"20px 16px",display:"flex",gap:14,alignItems:"flex-start",marginBottom:0,background:"#000"},
   catHeroIcon:{fontSize:30,flexShrink:0},
-  catHeroDesc:{fontSize:13,color:WHITE,fontWeight:600,marginBottom:4},
-  catHeroRule:{fontSize:11,color:DIM,fontFamily:MONO},
+  catHeroDesc:{fontSize:15,color:WHITE,fontWeight:700,marginBottom:4,fontFamily:"'Helvetica Neue',Arial,sans-serif"},
+  catHeroRule:{fontSize:12,color:"#555",fontFamily:"'Helvetica Neue',Arial,sans-serif"},
 
   taskList:{padding:"0 16px",display:"flex",flexDirection:"column",gap:8},
+  vList:{display:"flex",flexDirection:"column"},
   taskCard:{display:"flex",alignItems:"center",gap:12,background:CARD,border:`1px solid ${EDGE}`,padding:"14px",cursor:"pointer"},
   taskDone:{background:"#111000",border:`1px solid #2a2200`,opacity:0.85},
   taskIcon:{fontSize:22,width:28,textAlign:"center",flexShrink:0},
@@ -1196,6 +1254,20 @@ const S = {
   vendorBody:{flex:1,minWidth:0},
   vendorName:{fontSize:13,fontWeight:700,color:WHITE,fontFamily:BLACK,letterSpacing:"0.04em",marginBottom:2},
   vendorAction:{fontSize:11,color:DIM,fontFamily:MONO},
+
+  // NEW Apple-clarity vendor rows
+  vRow:{display:"flex",alignItems:"flex-start",gap:14,padding:"18px 16px",borderBottom:`1px solid #111`,background:"#000",cursor:"pointer",WebkitTapHighlightColor:"transparent"},
+  vRowDone:{background:"#080800",cursor:"default"},
+  vStatus:{width:24,height:24,borderRadius:"50%",border:"2px solid",flexShrink:0,marginTop:2,display:"flex",alignItems:"center",justifyContent:"center"},
+  vBody:{flex:1,minWidth:0},
+  vName:{fontSize:16,fontWeight:800,letterSpacing:"-0.01em",marginBottom:3,fontFamily:"'Helvetica Neue',Arial,sans-serif",lineHeight:1.2},
+  vAction:{fontSize:13,color:"#777",fontFamily:"'Helvetica Neue',Arial,sans-serif",lineHeight:1.4,fontWeight:400},
+  vHint:{fontSize:11,color:"#444",marginTop:6,fontFamily:"'Helvetica Neue',Arial,sans-serif"},
+  vRight:{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6,paddingTop:2,flexShrink:0},
+  vPts:{fontSize:18,fontWeight:800,letterSpacing:"-0.02em",fontFamily:"'Helvetica Neue',Arial,sans-serif"},
+  vChevron:{color:"#444",fontSize:22,lineHeight:1,marginTop:2},
+  vUploadBtn:{display:"flex",alignItems:"center",gap:6,background:"#111",border:`1px solid #222`,color:"#aaa",padding:"8px 14px",fontSize:11,fontFamily:MONO,letterSpacing:"0.12em",cursor:"pointer"},
+  vStaffBtn:{background:ACCENT,border:"none",color:"#000",padding:"10px 16px",fontSize:11,fontWeight:900,letterSpacing:"0.15em",cursor:"pointer",fontFamily:BLACK,fontStyle:"italic",width:"100%"},
 
   submitFooter:{margin:"24px 16px 0",background:"#000",border:`1px solid ${EDGE}`,borderLeft:`3px solid ${ACCENT}`,padding:"18px 20px",display:"flex",alignItems:"center",gap:16},
   submitHeading:{fontSize:13,fontWeight:900,color:ACCENT,letterSpacing:"0.15em",fontFamily:BLACK,marginBottom:4,fontStyle:"italic"},
