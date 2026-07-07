@@ -31,6 +31,23 @@ function exportCSV(registrations, entries) {
   a.click();
 }
 
+async function downloadAllPhotos(uploads) {
+  // Download photos one by one with a small delay
+  for(let i = 0; i < uploads.length; i++) {
+    const img = uploads[i];
+    try {
+      const response = await fetch(img.url);
+      const blob = await response.blob();
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${img.name}_${img.taskId}.jpg`.replace(/\s+/g,"_");
+      a.click();
+      URL.revokeObjectURL(a.href);
+      await new Promise(r => setTimeout(r, 300));
+    } catch(e) { console.error("Failed to download", img.url); }
+  }
+}
+
 export default function Admin() {
   const [authed, setAuthed]           = useState(false);
   const [pw, setPw]                   = useState("");
@@ -43,6 +60,8 @@ export default function Admin() {
   const [loading, setLoading]         = useState(false);
   const [search, setSearch]           = useState("");
   const [lastRefresh, setLastRefresh] = useState(null);
+  const [downloading, setDownloading]  = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
 
   const load = async () => {
     setLoading(true);
@@ -223,17 +242,76 @@ export default function Admin() {
 
       {/* Photos tab */}
       {tab==="photos" && (
-        <div style={{padding:"24px",display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:12}}>
-          {uploads.length===0 && <div style={{color:DIM,fontFamily:MONO,fontSize:12,padding:"24px 0"}}>No photos uploaded yet</div>}
-          {uploads.map((img,i)=>(
-            <div key={i} style={{background:CARD,border:`1px solid ${EDGE}`,overflow:"hidden",cursor:"pointer"}} onClick={()=>setSelectedImg(img)}>
-              <img src={img.url} alt="" style={{width:"100%",height:160,objectFit:"cover",display:"block"}}/>
-              <div style={{padding:"10px 12px"}}>
-                <div style={{fontSize:12,fontWeight:700,color:WHITE}}>{img.name}</div>
-                <div style={{fontSize:10,color:DIM,fontFamily:MONO,marginTop:2}}>{img.taskId} · {img.points}pts</div>
+        <div style={{padding:"24px"}}>
+          {/* Download all button */}
+          {uploads.length > 0 && (
+            <div style={{marginBottom:20,display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
+              <button
+                style={{background:ACCENT,border:"none",color:"#000",padding:"12px 24px",fontSize:12,fontWeight:900,letterSpacing:"0.15em",cursor:downloading?"not-allowed":"pointer",fontFamily:"'Arial Black',sans-serif",opacity:downloading?0.6:1}}
+                onClick={async()=>{
+                  if(downloading) return;
+                  setDownloading(true);
+                  for(let i=0;i<uploads.length;i++){
+                    setDownloadProgress(i+1);
+                    const img=uploads[i];
+                    try{
+                      const response=await fetch(img.url);
+                      const blob=await response.blob();
+                      const a=document.createElement("a");
+                      a.href=URL.createObjectURL(blob);
+                      a.download=`${img.name}_${img.taskId}.jpg`.replace(/\s+/g,"_");
+                      a.click();
+                      URL.revokeObjectURL(a.href);
+                      await new Promise(r=>setTimeout(r,400));
+                    }catch(e){console.error("Failed",img.url);}
+                  }
+                  setDownloading(false);
+                  setDownloadProgress(0);
+                }}
+              >
+                {downloading ? `DOWNLOADING ${downloadProgress}/${uploads.length}...` : `↓ DOWNLOAD ALL ${uploads.length} PHOTOS`}
+              </button>
+              <div style={{fontSize:11,color:DIM,fontFamily:MONO}}>
+                {uploads.filter(u=>u.url.includes("saturday")).length} Saturday · {uploads.filter(u=>u.url.includes("sunday")).length} Sunday
               </div>
             </div>
-          ))}
+          )}
+          {/* Filter by day */}
+          {uploads.length > 0 && (
+            <div style={{display:"flex",gap:8,marginBottom:16}}>
+              {["all","saturday","sunday"].map(d=>(
+                <button key={d}
+                  style={{background:"none",border:`1px solid ${EDGE}`,color:DIM,padding:"6px 14px",fontSize:10,letterSpacing:"0.2em",cursor:"pointer",fontFamily:MONO}}
+                  onClick={e=>{
+                    const btns=e.target.parentNode.querySelectorAll("button");
+                    btns.forEach(b=>{b.style.borderColor=EDGE;b.style.color=DIM;});
+                    e.target.style.borderColor=ACCENT;e.target.style.color=ACCENT;
+                  }}
+                >{d.toUpperCase()}</button>
+              ))}
+            </div>
+          )}
+          {uploads.length===0 && <div style={{color:DIM,fontFamily:MONO,fontSize:12,padding:"24px 0"}}>No photos uploaded yet</div>}
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))",gap:12}}>
+            {uploads.map((img,i)=>(
+              <div key={i} style={{background:CARD,border:`1px solid ${EDGE}`,overflow:"hidden"}}>
+                <div style={{position:"relative",cursor:"pointer"}} onClick={()=>setSelectedImg(img)}>
+                  <img src={img.url} alt="" style={{width:"100%",height:160,objectFit:"cover",display:"block"}}/>
+                  <div style={{position:"absolute",top:8,right:8,background:"rgba(0,0,0,0.7)",padding:"2px 8px",fontSize:9,fontFamily:MONO,color:WHITE,letterSpacing:"0.1em"}}>
+                    {img.url.includes("saturday")?"SAT":"SUN"}
+                  </div>
+                </div>
+                <div style={{padding:"10px 12px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div>
+                    <div style={{fontSize:12,fontWeight:700,color:WHITE}}>{img.name}</div>
+                    <div style={{fontSize:10,color:DIM,fontFamily:MONO,marginTop:2}}>{img.taskId} · {img.points}pts</div>
+                  </div>
+                  <a href={img.url} download={`${img.name}_${img.taskId}.jpg`} target="_blank" rel="noreferrer"
+                    style={{color:ACCENT,fontSize:18,textDecoration:"none"}} title="Download">↓</a>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
