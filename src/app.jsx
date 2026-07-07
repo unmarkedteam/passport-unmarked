@@ -216,18 +216,52 @@ function SplashScreen({onEnter}) {
   return (
     <div style={S.splash}>
       <div style={S.splashGrid}/>
-      <img src={LOGO_URL} alt="Unmarked" style={S.splashTopLogo}/>
+
+      {/* Invite-style header bar */}
+      <div style={S.splashHeaderBar}>
+        <div style={S.splashHeaderLeft}>
+          <div style={S.splashSysRow}>
+            <span style={S.splashSysLabel}>SYS</span>
+            <span style={S.splashSysVal}>00.1</span>
+            <span style={S.splashSysLabel}>STATUS</span>
+            <span style={{...S.splashSysVal,color:ACCENT}}>DIALED_IN</span>
+          </div>
+          <div style={S.splashSysRow}>
+            <span style={S.splashSysLabel}>LOC //</span>
+            <span style={S.splashSysVal}>-33.8148, 151.1926</span>
+          </div>
+          <div style={S.splashSysRow}>
+            <span style={S.splashSysLabel}>ADD //</span>
+            <span style={S.splashSysVal}>CARIBBEAN PARK, SYD</span>
+          </div>
+        </div>
+        <div style={S.splashHeaderRight}>
+          <img src={LOGO_URL} alt="Unmarked" style={S.splashTopLogo}/>
+        </div>
+      </div>
+
+      {/* Barcode strip */}
+      <div style={S.splashBarcode}>
+        {Array.from({length:48}).map((_,i)=>(
+          <div key={i} style={{...S.splashBarcodeBar, width: [1,2,1,3,1,2,1,1,2,3][i%10], opacity: i%7===0?0.3:1}}/>
+        ))}
+        <span style={S.splashBarcodeLabel}>UNMARKED.AU</span>
+      </div>
+
+      {/* Main title */}
       <div style={S.splashInner}>
-        <div style={S.splashRule}/>
+        <div style={S.splashTransmission}>TRANSMISSION // EVENT_PASSPORT_V2</div>
         <h1 style={S.splashTitle}>PASSPORT</h1>
         <div style={S.splashColon}>:</div>
         <h1 style={S.splashSub}>UNMARKED</h1>
         <p style={S.splashTag}>Complete tasks · Earn entries · Win the draw</p>
-        <PrimaryBtn onClick={onEnter} style={{marginTop:32}}>CLAIM YOUR PASSPORT →</PrimaryBtn>
+        <PrimaryBtn onClick={onEnter} style={{marginTop:32}}>ACTIVATE PASSPORT →</PrimaryBtn>
       </div>
+
+      {/* Footer */}
       <div style={S.splashFooterRow}>
-        <span style={S.splashFooterTxt}>CARIBBEAN PARK · MAY 30–31</span>
-        <span style={S.splashFooterTxt}>@UNMARKED.AU</span>
+        <span style={S.splashFooterTxt}>REFS_LOADED //</span>
+        <span style={S.splashFooterTxt}>VERSION_CONTROL · V2.2026</span>
       </div>
     </div>
   );
@@ -1091,8 +1125,8 @@ export default function App() {
 }
 
 // ─── STYLES ───────────────────────────────────────────────────────────────────
-const BG="#080808",CARD="#111",CARD2="#161616",EDGE="#1e1e1e",ACCENT="#C8FF00",WHITE="#efefef",DIM="#888",DIM2="#444";
-const MONO="'Courier New', monospace",SANS="'Helvetica Neue', Arial, sans-serif",BLACK="'Arial Black', 'Helvetica Neue', sans-serif";
+const BG="#000000",CARD="#0a0a0a",CARD2="#0d0d0d",EDGE="#1a1a1a",ACCENT="#FFE500",ACCENT2="#4DAAFF",WHITE="#FFFFFF",DIM="#555555",DIM2="#2a2a2a";
+const MONO="'Courier New', monospace",SANS="'Helvetica Neue', Arial, sans-serif",BLACK="'Arial Black', Impact, 'Helvetica Neue', sans-serif";
 
 const S = {
   splash:{minHeight:"100vh",background:BG,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"40px 24px",position:"relative",overflow:"hidden",fontFamily:SANS},
@@ -1107,21 +1141,21 @@ const S = {
   splashFooterRow:{position:"absolute",bottom:20,left:0,right:0,display:"flex",justifyContent:"space-between",padding:"0 24px"},
   splashFooterTxt:{color:DIM2,fontSize:10,letterSpacing:"0.25em",fontFamily:MONO},
 
-  screen:{minHeight:"100vh",background:BG,color:WHITE,fontFamily:SANS,paddingBottom:60,maxWidth:500,margin:"0 auto"},
+  screen:{minHeight:"100vh",background:"#000",color:WHITE,fontFamily:SANS,paddingBottom:60,maxWidth:500,margin:"0 auto"},
   pad:{padding:"24px 20px 0"},
-  eyebrow:{color:ACCENT,fontSize:10,letterSpacing:"0.35em",marginBottom:8,fontFamily:MONO},
+  eyebrow:{color:ACCENT,fontSize:9,letterSpacing:"0.35em",marginBottom:8,fontFamily:MONO},
   pageTitle:{fontSize:24,fontWeight:900,margin:"0 0 6px",letterSpacing:"-0.02em",color:WHITE,fontFamily:BLACK},
   pageSub:{color:DIM,fontSize:13,lineHeight:1.6,margin:0},
-  sectionLabel:{padding:"20px 20px 10px",fontSize:10,letterSpacing:"0.35em",color:DIM,fontFamily:MONO},
+  sectionLabel:{padding:"20px 20px 10px",fontSize:9,letterSpacing:"0.35em",color:"#444",fontFamily:MONO},
 
-  topBar:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"14px 16px",borderBottom:`1px solid ${EDGE}`,background:"#0c0c0c",position:"sticky",top:0,zIndex:10},
+  topBar:{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px",borderBottom:`1px solid ${EDGE}`,background:"#000",position:"sticky",top:0,zIndex:10},
   topBarLogo:{height:22,width:"auto",objectFit:"contain"},
   topBarTitle:{fontSize:11,fontWeight:700,letterSpacing:"0.2em",color:DIM,fontFamily:MONO,flex:1,textAlign:"center"},
   topBarBack:{background:"none",border:"none",color:DIM,fontSize:18,cursor:"pointer",padding:"0 4px",width:36},
 
-  bottomNav:{position:"fixed",bottom:0,left:0,right:0,background:"#0c0c0c",borderTop:`1px solid ${EDGE}`,display:"flex",zIndex:100,maxWidth:500,margin:"0 auto"},
+  bottomNav:{position:"fixed",bottom:0,left:0,right:0,background:"#000",borderTop:`1px solid ${EDGE}`,display:"flex",zIndex:100,maxWidth:500,margin:"0 auto"},
   navBtn:{flex:1,background:"none",border:"none",padding:"12px 0 14px",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:3},
-  navBtnActive:{borderTop:`2px solid ${ACCENT}`},
+  navBtnActive:{borderTop:`2px solid ${ACCENT}`,background:"#0d0d00"},
   navIcon:{fontSize:18},
   navLabel:{fontSize:9,letterSpacing:"0.2em",color:DIM,fontFamily:MONO},
 
@@ -1130,9 +1164,9 @@ const S = {
   fieldInput:{width:"100%",background:CARD,border:`1px solid ${EDGE}`,color:WHITE,padding:"13px 14px",fontSize:15,fontFamily:SANS,outline:"none",boxSizing:"border-box",borderRadius:0},
   errMsg:{color:"#ff5555",fontSize:12,marginBottom:12,fontFamily:MONO},
   disclaimer:{marginTop:16,fontSize:11,color:DIM,fontFamily:MONO,lineHeight:1.7,letterSpacing:"0.02em",borderTop:`1px solid ${EDGE}`,paddingTop:16},
-  primaryBtn:{width:"100%",background:ACCENT,color:"#000",border:"none",padding:"17px 24px",fontSize:12,fontWeight:900,letterSpacing:"0.18em",cursor:"pointer",fontFamily:BLACK,display:"block"},
+  primaryBtn:{width:"100%",background:ACCENT,color:"#000",border:"none",padding:"17px 24px",fontSize:12,fontWeight:900,letterSpacing:"0.18em",cursor:"pointer",fontFamily:BLACK,display:"block",fontStyle:"italic"},
 
-  heroCard:{background:CARD,borderBottom:`1px solid ${EDGE}`,padding:"22px 18px 18px"},
+  heroCard:{background:"#000",borderBottom:`1px solid ${EDGE}`,padding:"22px 18px 18px",borderTop:`1px solid ${EDGE}`},
   heroTop:{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:16},
   holderName:{fontSize:18,fontWeight:900,color:WHITE,letterSpacing:"-0.01em",fontFamily:BLACK},
   holderIg:{fontSize:11,color:DIM,marginTop:2,fontFamily:MONO},
@@ -1143,14 +1177,14 @@ const S = {
   progressFill:{height:"100%",background:ACCENT,transition:"width 0.4s ease"},
   progressLbl:{fontSize:11,color:DIM,fontFamily:MONO,letterSpacing:"0.05em"},
 
-  prizeStatus:{marginTop:12,background:"#0d1a00",border:`1px solid #2a4400`,padding:"10px 12px",display:"flex",alignItems:"center",gap:10},
+  prizeStatus:{marginTop:12,background:"#1a1500",border:`1px solid #3a3000`,padding:"10px 12px",display:"flex",alignItems:"center",gap:10},
   prizeStatusIcon:{fontSize:20},
   prizeStatusLabel:{fontSize:9,color:ACCENT,letterSpacing:"0.3em",fontFamily:MONO,marginBottom:2},
   prizeStatusName:{fontSize:12,color:WHITE,fontWeight:700},
   nextPrize:{marginTop:8,fontSize:11,color:DIM,fontFamily:MONO,letterSpacing:"0.05em"},
 
-  drawBtn:{width:"100%",marginTop:14,background:ACCENT,color:"#000",border:"none",padding:"14px",fontSize:12,fontWeight:900,letterSpacing:"0.15em",cursor:"pointer",fontFamily:BLACK},
-  submittedBadge:{marginTop:12,border:`1px solid ${ACCENT}`,background:"#0d1a00",color:ACCENT,padding:"11px 14px",fontSize:11,fontWeight:700,letterSpacing:"0.12em",fontFamily:MONO,textAlign:"center"},
+  drawBtn:{width:"100%",marginTop:14,background:ACCENT,color:"#000",border:"none",padding:"14px",fontSize:12,fontWeight:900,letterSpacing:"0.15em",cursor:"pointer",fontFamily:BLACK,fontStyle:"italic"},
+  submittedBadge:{marginTop:12,border:`1px solid ${ACCENT}`,background:"#1a1500",color:ACCENT,padding:"11px 14px",fontSize:11,fontWeight:700,letterSpacing:"0.12em",fontFamily:MONO,textAlign:"center"},
 
   claimBtnWrap:{position:"fixed",bottom:64,left:0,right:0,padding:"0 16px",maxWidth:500,margin:"0 auto",zIndex:90},
   claimBtn:{width:"100%",background:"#FFD700",color:"#000",border:"none",padding:"16px",fontSize:13,fontWeight:900,letterSpacing:"0.2em",cursor:"pointer",fontFamily:BLACK,boxShadow:"0 -4px 20px rgba(255,215,0,0.3)"},
@@ -1173,7 +1207,7 @@ const S = {
 
   taskList:{padding:"0 16px",display:"flex",flexDirection:"column",gap:8},
   taskCard:{display:"flex",alignItems:"center",gap:12,background:CARD,border:`1px solid ${EDGE}`,padding:"14px",cursor:"pointer"},
-  taskDone:{background:"#0c150a",border:`1px solid #1f3010`,opacity:0.85},
+  taskDone:{background:"#111000",border:`1px solid #2a2200`,opacity:0.85},
   taskIcon:{fontSize:22,width:28,textAlign:"center",flexShrink:0},
   taskBody:{flex:1,minWidth:0},
   taskName:{fontSize:13,fontWeight:700,color:WHITE,marginBottom:2},
@@ -1181,8 +1215,8 @@ const S = {
   voteTag:{fontSize:10,color:ACCENT,marginTop:4,fontFamily:MONO},
   taskRight:{flexShrink:0,display:"flex",flexDirection:"column",alignItems:"flex-end",gap:5},
   taskPts:{fontSize:10,fontWeight:700,color:DIM,background:EDGE,padding:"3px 7px",fontFamily:MONO},
-  taskPtsDone:{color:ACCENT,background:"#162400"},
-  checkStamp:{color:ACCENT,fontWeight:900,fontSize:17},
+  taskPtsDone:{color:ACCENT,background:"#1a1500"},
+  checkStamp:{color:ACCENT,fontWeight:900,fontSize:17,fontStyle:"italic"},
   arrow:{color:DIM,fontSize:20,lineHeight:1,paddingRight:4},
   uploadSection:{marginTop:10,borderTop:`1px solid ${EDGE}`,paddingTop:10},
   uploadLabel:{display:"flex",alignItems:"center",gap:8,background:EDGE,padding:"12px 14px",cursor:"pointer",fontSize:11,letterSpacing:"0.15em",fontFamily:"'Courier New',monospace",color:DIM},
@@ -1194,14 +1228,14 @@ const S = {
   uploadConfirmBtn:{background:ACCENT,color:"#000",border:"none",padding:"10px 14px",fontSize:11,fontWeight:900,letterSpacing:"0.15em",cursor:"pointer",fontFamily:"'Arial Black','Helvetica Neue',sans-serif"},
 
   vendorRow:{display:"flex",alignItems:"center",gap:12,background:CARD,border:`1px solid ${EDGE}`,padding:"14px",cursor:"pointer"},
-  vendorDone:{background:"#0c150a",border:`1px solid #1f3010`},
+  vendorDone:{background:"#111000",border:`1px solid #2a2200`},
   vendorDot:{width:10,height:10,borderRadius:"50%",border:"2px solid",flexShrink:0,marginTop:2},
   vendorBody:{flex:1,minWidth:0},
   vendorName:{fontSize:13,fontWeight:700,color:WHITE,fontFamily:BLACK,letterSpacing:"0.04em",marginBottom:2},
   vendorAction:{fontSize:11,color:DIM,fontFamily:MONO},
 
-  submitFooter:{margin:"24px 16px 0",background:"#0d0d0d",border:`1px solid ${EDGE}`,borderLeft:`3px solid ${ACCENT}`,padding:"18px 20px",display:"flex",alignItems:"center",gap:16},
-  submitHeading:{fontSize:13,fontWeight:900,color:ACCENT,letterSpacing:"0.15em",fontFamily:BLACK,marginBottom:4},
+  submitFooter:{margin:"24px 16px 0",background:"#000",border:`1px solid ${EDGE}`,borderLeft:`3px solid ${ACCENT}`,padding:"18px 20px",display:"flex",alignItems:"center",gap:16},
+  submitHeading:{fontSize:13,fontWeight:900,color:ACCENT,letterSpacing:"0.15em",fontFamily:BLACK,marginBottom:4,fontStyle:"italic"},
   submitSub:{fontSize:12,color:DIM,fontFamily:MONO,lineHeight:1.4},
 
   // Leaderboard
@@ -1210,24 +1244,24 @@ const S = {
   lbMyRank:{fontSize:28,fontWeight:900,color:ACCENT,fontFamily:BLACK,minWidth:44},
   lbMyName:{fontSize:16,fontWeight:900,color:WHITE,fontFamily:BLACK,letterSpacing:"-0.01em"},
   lbMyPts:{fontSize:11,color:DIM,fontFamily:MONO,marginTop:2},
-  lbMyBadge:{background:ACCENT,color:"#000",textAlign:"center",padding:"8px 14px"},
+  lbMyBadge:{background:ACCENT,color:"#000",textAlign:"center",padding:"8px 14px",fontStyle:"italic"},
   lbMyBadgeNum:{fontSize:20,fontWeight:900,lineHeight:1,fontFamily:BLACK},
   lbMyBadgeLbl:{fontSize:9,fontWeight:700,letterSpacing:"0.2em"},
 
   prizeList:{padding:"0 16px",display:"flex",flexDirection:"column",gap:6},
   prizeTierRow:{display:"flex",alignItems:"center",gap:10,background:CARD,border:`1px solid ${EDGE}`,padding:"12px 14px"},
-  prizeTierUnlocked:{background:"#0c150a",border:`1px solid #2a4400`},
+  prizeTierUnlocked:{background:"#111000",border:`1px solid #2a2200`},
   prizeTierIcon:{fontSize:20,width:26,textAlign:"center",flexShrink:0},
   prizeTierBody:{flex:1},
   prizeTierName:{fontSize:13,fontWeight:700,color:WHITE,fontFamily:BLACK,letterSpacing:"0.04em"},
   prizeTierDesc:{fontSize:10,color:DIM,fontFamily:MONO,marginTop:1},
   prizeTierPts:{fontSize:11,fontWeight:700,color:DIM,fontFamily:MONO},
-  prizeTierPtsOn:{color:ACCENT},
+  prizeTierPtsOn:{color:ACCENT,fontStyle:"italic"},
   prizeTierCheck:{color:ACCENT,fontWeight:900,fontSize:16,paddingLeft:6},
 
   lbList:{padding:"0 16px",display:"flex",flexDirection:"column",gap:6},
   lbRow:{display:"flex",alignItems:"center",gap:12,background:CARD,border:`1px solid ${EDGE}`,padding:"12px 14px"},
-  lbRowMe:{background:"#0d1a00",border:`1px solid ${ACCENT}`},
+  lbRowMe:{background:"#111000",border:`1px solid ${ACCENT}`},
   lbRank:{width:28,textAlign:"center",fontSize:15,fontWeight:900,color:DIM,fontFamily:BLACK,flexShrink:0},
   lbInitials:{width:36,height:36,borderRadius:"50%",background:EDGE,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:900,color:WHITE,fontFamily:BLACK,flexShrink:0},
   lbEntryBody:{flex:1},
@@ -1237,7 +1271,7 @@ const S = {
   lbEmpty:{padding:"24px",textAlign:"center",color:DIM,fontSize:12,fontFamily:MONO},
 
   // Claim prizes
-  claimSummary:{margin:"0 16px 16px",background:"#0d1a00",border:`1px solid ${ACCENT}`,padding:"20px",textAlign:"center"},
+  claimSummary:{margin:"0 16px 16px",background:"#111000",border:`1px solid ${ACCENT}`,padding:"20px",textAlign:"center"},
   claimSummaryPts:{fontSize:32,fontWeight:900,color:ACCENT,fontFamily:BLACK,letterSpacing:"-0.02em"},
   claimSummaryPrize:{fontSize:18,fontWeight:900,color:WHITE,fontFamily:BLACK,marginTop:4},
   claimSummaryDesc:{fontSize:12,color:DIM,fontFamily:MONO,marginTop:4},
@@ -1248,7 +1282,7 @@ const S = {
   voteSection:{padding:"0 24px 12px"},
   voteCats:{display:"flex",gap:8,marginBottom:16,flexWrap:"wrap"},
   voteCatBtn:{background:"none",border:`1px solid ${EDGE}`,color:DIM,padding:"8px 14px",fontSize:11,fontFamily:MONO,letterSpacing:"0.1em",cursor:"pointer"},
-  voteCatOn:{border:`1px solid ${ACCENT}`,color:ACCENT,background:"#0d1a00"},
+  voteCatOn:{border:`1px solid ${ACCENT}`,color:ACCENT,background:"#111000"},
   voteSelect:{width:"100%",background:CARD,border:`1px solid ${EDGE}`,color:WHITE,padding:"13px 14px",fontSize:14,fontFamily:SANS,outline:"none",boxSizing:"border-box",borderRadius:0,marginBottom:8,appearance:"auto"},
   voteHint:{fontSize:11,color:"#ff9900",fontFamily:MONO,marginBottom:8},
   dots:{display:"flex",justifyContent:"center",gap:18,padding:"16px 0 8px"},
@@ -1259,19 +1293,19 @@ const S = {
   numKey:{background:CARD,border:`1px solid ${EDGE}`,color:WHITE,fontSize:22,padding:"18px 0",cursor:"pointer",fontFamily:SANS,fontWeight:700},
   numBlank:{background:"transparent",border:"none",cursor:"default"},
 
-  centre:{minHeight:"100vh",background:BG,color:WHITE,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"40px 24px",fontFamily:SANS,textAlign:"center",maxWidth:500,margin:"0 auto"},
-  stampCircle:{width:72,height:72,borderRadius:"50%",background:ACCENT,color:"#000",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,fontWeight:900,marginBottom:20},
-  bigWord:{fontSize:"clamp(40px,12vw,60px)",fontWeight:900,letterSpacing:"-0.03em",color:WHITE,fontFamily:BLACK,marginBottom:8},
+  centre:{minHeight:"100vh",background:"#000",color:WHITE,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:"40px 24px",fontFamily:SANS,textAlign:"center",maxWidth:500,margin:"0 auto"},
+  stampCircle:{width:72,height:72,borderRadius:0,background:ACCENT,color:"#000",display:"flex",alignItems:"center",justifyContent:"center",fontSize:28,fontWeight:900,marginBottom:20,fontStyle:"italic",fontFamily:BLACK},
+  bigWord:{fontSize:"clamp(40px,12vw,60px)",fontWeight:900,letterSpacing:"-0.03em",color:WHITE,fontFamily:BLACK,marginBottom:8,fontStyle:"italic"},
   successLabel:{fontSize:15,color:DIM,marginBottom:16,fontFamily:MONO,letterSpacing:"0.05em"},
   successPts:{fontSize:20,color:ACCENT,fontWeight:700,marginBottom:4,fontFamily:BLACK},
   successTotal:{fontSize:12,color:DIM,marginBottom:32,fontFamily:MONO},
   drawNote:{color:DIM,fontSize:13,lineHeight:1.8,marginBottom:32,maxWidth:300},
-  closeBtn:{marginTop:8,background:"transparent",border:`2px solid ${WHITE}`,color:WHITE,padding:"16px 48px",fontSize:16,fontWeight:900,letterSpacing:"0.2em",cursor:"pointer",fontFamily:BLACK},
+  closeBtn:{marginTop:8,background:"transparent",border:`2px solid ${WHITE}`,color:WHITE,padding:"16px 48px",fontSize:16,fontWeight:900,letterSpacing:"0.2em",cursor:"pointer",fontFamily:BLACK,fontStyle:"italic"},
 
   // Explore
-  exploreHero:{background:CARD,borderBottom:`1px solid ${EDGE}`,padding:"28px 20px 24px"},
+  exploreHero:{background:"#000",borderBottom:`1px solid ${EDGE}`,padding:"28px 20px 24px"},
   exploreHeroEye:{fontSize:10,letterSpacing:"0.35em",color:ACCENT,fontFamily:MONO,marginBottom:8},
-  exploreHeroTitle:{fontSize:"clamp(32px,9vw,48px)",fontWeight:900,color:WHITE,fontFamily:BLACK,letterSpacing:"-0.03em",lineHeight:1.05,marginBottom:10},
+  exploreHeroTitle:{fontSize:"clamp(32px,9vw,48px)",fontWeight:900,color:WHITE,fontFamily:BLACK,letterSpacing:"-0.04em",lineHeight:0.95,marginBottom:10,fontStyle:"italic"},
   exploreHeroSub:{fontSize:13,color:DIM,fontFamily:MONO,lineHeight:1.6},
   exploreList:{padding:"16px 16px 0",display:"flex",flexDirection:"column",gap:12},
   exploreCard:{background:CARD,border:`1px solid ${EDGE}`,overflow:"hidden",display:"flex"},
