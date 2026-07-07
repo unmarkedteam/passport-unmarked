@@ -208,7 +208,7 @@ function SplashScreen({onEnter}) {
           </div>
           <div style={S.splashSysRow}>
             <span style={S.splashSysLabel}>ADD //</span>
-            <span style={S.splashSysVal}>CARIBBEAN PARK, SYD</span>
+            <span style={S.splashSysVal}>SYDNEY SHOWGROUND, SYD</span>
           </div>
         </div>
         <div style={S.splashHeaderRight}>
@@ -226,18 +226,36 @@ function SplashScreen({onEnter}) {
 
       {/* Main title */}
       <div style={S.splashInner}>
-        <div style={S.splashTransmission}>TRANSMISSION // EVENT_PASSPORT_V2</div>
+        <div style={S.splashTransmission}>UNMARKED VOL. V — SYDNEY</div>
         <h1 style={S.splashTitle}>PASSPORT</h1>
         <div style={S.splashColon}>:</div>
         <h1 style={S.splashSub}>UNMARKED</h1>
+
+        {/* Date */}
+        <div style={{marginTop:20,display:"flex",alignItems:"center",gap:12}}>
+          <div style={{height:1,width:24,background:"rgba(255,255,255,0.15)"}}/>
+          <span style={{fontSize:13,color:"rgba(255,255,255,0.5)",fontFamily:JOST,letterSpacing:"0.15em",fontWeight:500}}>25 – 26 JULY</span>
+          <div style={{height:1,width:24,background:"rgba(255,255,255,0.15)"}}/>
+        </div>
+
         <p style={S.splashTag}>Complete tasks · Earn entries · Win the draw</p>
-        <PrimaryBtn onClick={onEnter} style={{marginTop:32}}>ACTIVATE PASSPORT →</PrimaryBtn>
+        <PrimaryBtn onClick={onEnter} style={{marginTop:28}}>ACTIVATE PASSPORT →</PrimaryBtn>
+
+        {/* Sponsors */}
+        <div style={{marginTop:28,paddingTop:20,borderTop:"1px solid rgba(255,255,255,0.08)",width:"100%",textAlign:"center"}}>
+          <div style={{fontSize:9,color:"rgba(255,255,255,0.25)",letterSpacing:"0.3em",fontFamily:JOST,marginBottom:10,textTransform:"uppercase"}}>Proudly Sponsored By</div>
+          <div style={{display:"flex",justifyContent:"center",gap:20,alignItems:"center"}}>
+            <span style={{fontSize:12,fontWeight:700,color:"rgba(255,255,255,0.5)",letterSpacing:"0.15em",fontFamily:JOST,textTransform:"uppercase"}}>LUMIX</span>
+            <span style={{color:"rgba(255,255,255,0.15)",fontSize:10}}>·</span>
+            <span style={{fontSize:12,fontWeight:700,color:"rgba(255,255,255,0.5)",letterSpacing:"0.1em",fontFamily:JOST,textTransform:"uppercase"}}>Shannons Insurance</span>
+          </div>
+        </div>
       </div>
 
       {/* Footer */}
       <div style={S.splashFooterRow}>
         <span style={S.splashFooterTxt}>REFS_LOADED //</span>
-        <span style={S.splashFooterTxt}>VERSION_CONTROL · V2.2026</span>
+        <span style={S.splashFooterTxt}>VERSION_CONTROL · V3.2026</span>
       </div>
     </div>
   );
