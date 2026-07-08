@@ -982,15 +982,15 @@ function HotWheelsTab({claimed, onClaim}) {
         <div style={{position:"absolute", top:0, left:0, right:0, height:4, background:HW_RED}}/>
         <div style={{padding:"32px 20px 28px"}}>
           {/* Eyebrow */}
-          <div style={{fontSize:9, color:"rgba(255,255,255,0.4)", letterSpacing:"0.35em", fontFamily:MONO, marginBottom:12, textTransform:"uppercase"}}>
+          <div style={{fontSize:9, color:"rgba(255,255,255,0.4)", letterSpacing:"0.35em", fontFamily:MONO, marginBottom:16, textTransform:"uppercase"}}>
             OFFICIAL PARTNER — 2026
           </div>
-          {/* Hot Wheels wordmark style */}
-          <div style={{display:"flex", alignItems:"center", gap:0, marginBottom:4}}>
-            <div style={{background:HW_RED, padding:"4px 10px", display:"inline-block"}}>
-              <span style={{fontSize:22, fontWeight:900, color:"#FFF", fontFamily:JOST, letterSpacing:"-0.02em", fontStyle:"italic"}}>HOT WHEELS</span>
-            </div>
-          </div>
+          {/* Hot Wheels official SVG logo */}
+          <img
+            src="https://assets.hotwheelslegends.com/9fdf8b4a78fe6eb8ee7c0308c0af216990d8f2af/build/assets/logo-BYRn4Gxd.svg"
+            alt="Hot Wheels Legends"
+            style={{width:"100%", maxWidth:320, height:"auto", marginBottom:16, display:"block"}}
+          />
           <h1 style={{fontSize:"clamp(28px,8vw,40px)", fontWeight:900, color:"#FFF", fontFamily:JOST, letterSpacing:"-0.04em", lineHeight:1, margin:"8px 0 0", fontStyle:"italic"}}>
             LEGENDS TOUR
           </h1>
@@ -1055,7 +1055,7 @@ function HotWheelsTab({claimed, onClaim}) {
               <div style={{fontSize:13, color:TEXT2, fontFamily:JOST, marginTop:4, lineHeight:1.5}}>
                 {claimed
                   ? "You've completed the Hot Wheels Legends challenge. See the Hot Wheels stand to claim your prize."
-                  : "Visit the Hot Wheels Legends stand, complete the challenge, and get verified by Hot Wheels staff to win an exclusive die-cast car."}
+                  : "Visit the Hot Wheels Legends stand, complete the challenge, and get verified by Unmarked staff to win an exclusive die-cast car."}
               </div>
             </div>
           </div>
@@ -1084,9 +1084,70 @@ function HotWheelsTab({claimed, onClaim}) {
         </div>
 
         {/* Fine print */}
-        <div style={{fontSize:11, color:TEXT3, fontFamily:JOST, lineHeight:1.6, textAlign:"center", padding:"0 8px 24px"}}>
+        <div style={{fontSize:11, color:TEXT3, fontFamily:JOST, lineHeight:1.6, textAlign:"center", padding:"0 8px 16px"}}>
           One prize per passport holder · Must be present at the Hot Wheels stand · Staff verification required
         </div>
+
+        {/* How it works — text over image cards */}
+        <div style={{fontSize:10, color:TEXT3, letterSpacing:"0.3em", fontFamily:MONO, marginBottom:12, textTransform:"uppercase"}}>How It Works</div>
+        <div style={{display:"flex", flexDirection:"column", gap:10, marginBottom:24}}>
+          {[
+            {
+              emoji:"🔍",
+              heading:"FIND THE STAND",
+              body:"Head to the Hot Wheels Legends stand here at Unmarked and check out the incredible custom car builds on display.",
+              bg:"#E8002D",
+            },
+            {
+              emoji:"🏎️",
+              heading:"SHOW YOUR PASSION",
+              body:"Custom car builders from across Australia compete for a chance to have their build turned into a real Hot Wheels® die-cast car — sold worldwide.",
+              bg:"#FFD100",
+              dark:true,
+            },
+            {
+              emoji:"🗳️",
+              heading:"VOTE FOR YOUR FAVOURITE",
+              body:"Think you know which car deserves to be immortalised? Cast your vote at the stand and help decide Australia's next Legends winner.",
+              bg:"#1A1A2E",
+            },
+            {
+              emoji:"🏆",
+              heading:"THE WINNING CAR BECOMES A HOT WHEELS",
+              body:"The selected build goes into production as an official Hot Wheels® die-cast car. One car. One winner. Global release.",
+              bg:"#0A0A0A",
+            },
+          ].map((card,i)=>(
+            <div key={i} style={{
+              background:card.bg,
+              borderRadius:16,
+              padding:"22px 20px",
+              position:"relative",
+              overflow:"hidden",
+              boxShadow:"0 4px 16px rgba(0,0,0,0.12)",
+            }}>
+              {/* Background emoji watermark */}
+              <div style={{position:"absolute",right:16,bottom:-8,fontSize:72,opacity:0.15,lineHeight:1}}>{card.emoji}</div>
+              <div style={{position:"relative",zIndex:1}}>
+                <div style={{fontSize:28,marginBottom:10}}>{card.emoji}</div>
+                <div style={{fontSize:14,fontWeight:900,color:card.dark?"#1A1A1A":"#FFF",fontFamily:JOST,letterSpacing:"-0.01em",marginBottom:6,fontStyle:"italic"}}>{card.heading}</div>
+                <div style={{fontSize:13,color:card.dark?"rgba(0,0,0,0.65)":"rgba(255,255,255,0.75)",fontFamily:JOST,lineHeight:1.6,fontWeight:400}}>{card.body}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* CTA link to full site */}
+        <a
+          href="https://hotwheelslegends.com/events/australia-new-zealand-au-2026"
+          target="_blank"
+          rel="noreferrer"
+          style={{display:"block",background:"#FFF",border:`2px solid ${HW_RED}`,borderRadius:14,padding:"16px",textAlign:"center",textDecoration:"none",marginBottom:32,boxShadow:SHADOW}}
+        >
+          <span style={{fontSize:13,fontWeight:800,color:HW_RED,fontFamily:JOST,letterSpacing:"0.05em",textTransform:"uppercase"}}>
+            Learn More at hotwheelslegends.com →
+          </span>
+        </a>
       </div>
     </div>
   );
