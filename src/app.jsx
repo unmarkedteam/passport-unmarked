@@ -177,6 +177,7 @@ function BottomNav({tab, setTab}) {
         {id:"passport",    label:"PASSPORT",    icon:"📋"},
         {id:"leaderboard", label:"LEADERBOARD", icon:"🏆"},
         {id:"explore",     label:"EXPLORE",     icon:"🔍"},
+        {id:"hotwheels",   label:"HOT WHEELS",  icon:"🔥"},
       ].map(t=>(
         <button key={t.id} style={{...S.navBtn,...(tab===t.id?S.navBtnActive:{})}} onClick={()=>setTab(t.id)}>
           <span style={S.navIcon}>{t.icon}</span>
@@ -966,6 +967,130 @@ function ExploreTab() {
   );
 }
 
+
+// ─── HOT WHEELS TAB ────────────────────────────────────────────────────────
+const HW_RED = "#E8002D";
+const HW_YELLOW = "#FFD100";
+const HW_DARK = "#0A0A0A";
+
+function HotWheelsTab({claimed, onClaim}) {
+  return (
+    <div style={{...S.screen, paddingBottom:120}}>
+      {/* Hero — dark dramatic */}
+      <div style={{background:HW_DARK, position:"relative", overflow:"hidden"}}>
+        {/* Red stripe */}
+        <div style={{position:"absolute", top:0, left:0, right:0, height:4, background:HW_RED}}/>
+        <div style={{padding:"32px 20px 28px"}}>
+          {/* Eyebrow */}
+          <div style={{fontSize:9, color:"rgba(255,255,255,0.4)", letterSpacing:"0.35em", fontFamily:MONO, marginBottom:12, textTransform:"uppercase"}}>
+            OFFICIAL PARTNER — 2026
+          </div>
+          {/* Hot Wheels wordmark style */}
+          <div style={{display:"flex", alignItems:"center", gap:0, marginBottom:4}}>
+            <div style={{background:HW_RED, padding:"4px 10px", display:"inline-block"}}>
+              <span style={{fontSize:22, fontWeight:900, color:"#FFF", fontFamily:JOST, letterSpacing:"-0.02em", fontStyle:"italic"}}>HOT WHEELS</span>
+            </div>
+          </div>
+          <h1 style={{fontSize:"clamp(28px,8vw,40px)", fontWeight:900, color:"#FFF", fontFamily:JOST, letterSpacing:"-0.04em", lineHeight:1, margin:"8px 0 0", fontStyle:"italic"}}>
+            LEGENDS TOUR
+          </h1>
+          <div style={{fontSize:13, color:HW_YELLOW, fontFamily:JOST, fontWeight:600, marginTop:8, letterSpacing:"0.05em"}}>
+            AUSTRALIA & NEW ZEALAND · 2026
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div style={{padding:"24px 20px 0"}}>
+
+        {/* About */}
+        <div style={{background:"#FFF", borderRadius:16, padding:"20px", marginBottom:16, boxShadow:SHADOW}}>
+          <div style={{fontSize:10, color:TEXT3, letterSpacing:"0.3em", fontFamily:MONO, marginBottom:10, textTransform:"uppercase"}}>About the Tour</div>
+          <p style={{fontSize:14, color:TEXT1, lineHeight:1.7, fontFamily:JOST, fontWeight:400, margin:0}}>
+            The <strong>2026 Hot Wheels Legends Tour</strong> is back and better than ever — on the search for a custom vehicle worthy of becoming an official Hot Wheels® die-cast car.
+          </p>
+          <p style={{fontSize:14, color:TEXT2, lineHeight:1.7, fontFamily:JOST, fontWeight:400, margin:"12px 0 0"}}>
+            Custom car builders compete at local events across Australia and New Zealand for a chance to have their build immortalised as a real Hot Wheels die-cast. The winning car gets produced and sold worldwide.
+          </p>
+        </div>
+
+        {/* Key details */}
+        <div style={{background:"#FFF", borderRadius:16, padding:"20px", marginBottom:16, boxShadow:SHADOW}}>
+          <div style={{fontSize:10, color:TEXT3, letterSpacing:"0.3em", fontFamily:MONO, marginBottom:14, textTransform:"uppercase"}}>Event Details</div>
+          {[
+            {icon:"📍", label:"Location", value:"Sydney Showground, Sydney Olympic Park"},
+            {icon:"📅", label:"Date", value:"25 – 26 July 2026"},
+            {icon:"🏆", label:"Prize", value:"Your car becomes an official Hot Wheels® die-cast"},
+            {icon:"🔗", label:"Register", value:"hotwheelslegends.com", link:"https://hotwheelslegends.com/events/australia-new-zealand-au-2026"},
+          ].map(d=>(
+            <div key={d.label} style={{display:"flex", gap:14, alignItems:"flex-start", marginBottom:14}}>
+              <span style={{fontSize:20, flexShrink:0, marginTop:1}}>{d.icon}</span>
+              <div>
+                <div style={{fontSize:11, color:TEXT3, fontFamily:JOST, fontWeight:600, letterSpacing:"0.05em", textTransform:"uppercase", marginBottom:2}}>{d.label}</div>
+                {d.link
+                  ? <a href={d.link} target="_blank" rel="noreferrer" style={{fontSize:14, color:HW_RED, fontFamily:JOST, fontWeight:600, textDecoration:"none"}}>{d.value} →</a>
+                  : <div style={{fontSize:14, color:TEXT1, fontFamily:JOST, fontWeight:500}}>{d.value}</div>
+                }
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Win a Hot Wheels car — challenge box */}
+        <div style={{
+          background: claimed ? "#FFF0F0" : "#F0FFF4",
+          border: `2px solid ${claimed ? HW_RED : "#34C759"}`,
+          borderRadius:16, padding:"20px", marginBottom:16,
+          boxShadow: claimed ? `0 4px 20px rgba(232,0,45,0.12)` : `0 4px 20px rgba(52,199,89,0.12)`,
+        }}>
+          <div style={{display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:12}}>
+            <div>
+              <div style={{fontSize:10, color:claimed ? HW_RED : "#34C759", letterSpacing:"0.3em", fontFamily:MONO, marginBottom:6, textTransform:"uppercase", fontWeight:700}}>
+                {claimed ? "CHALLENGE COMPLETE" : "AVAILABLE NOW"}
+              </div>
+              <div style={{fontSize:20, fontWeight:900, color:TEXT1, fontFamily:JOST, letterSpacing:"-0.02em", fontStyle:"italic"}}>
+                WIN A HOT WHEELS CAR 🏎️
+              </div>
+              <div style={{fontSize:13, color:TEXT2, fontFamily:JOST, marginTop:4, lineHeight:1.5}}>
+                {claimed
+                  ? "You've completed the Hot Wheels Legends challenge. See the Hot Wheels stand to claim your prize."
+                  : "Visit the Hot Wheels Legends stand, complete the challenge, and get verified by Hot Wheels staff to win an exclusive die-cast car."}
+              </div>
+            </div>
+          </div>
+
+          {/* Status indicator */}
+          <div style={{display:"flex", alignItems:"center", gap:10, marginBottom:claimed?0:16}}>
+            <div style={{
+              width:12, height:12, borderRadius:"50%",
+              background: claimed ? HW_RED : "#34C759",
+              boxShadow: claimed ? `0 0 8px ${HW_RED}` : `0 0 8px #34C759`,
+            }}/>
+            <span style={{fontSize:12, fontWeight:700, color: claimed ? HW_RED : "#34C759", fontFamily:JOST, letterSpacing:"0.05em"}}>
+              {claimed ? "CLAIMED — UNAVAILABLE" : "AVAILABLE — TAP TO CLAIM"}
+            </span>
+          </div>
+
+          {/* CTA button — only show if not claimed */}
+          {!claimed && (
+            <button
+              style={{width:"100%", background:HW_RED, color:"#FFF", border:"none", padding:"16px", fontSize:14, fontWeight:900, letterSpacing:"0.08em", cursor:"pointer", fontFamily:JOST, borderRadius:12, textTransform:"uppercase", fontStyle:"italic", boxShadow:`0 4px 20px rgba(232,0,45,0.35)`}}
+              onClick={onClaim}
+            >
+              🏎️  VERIFY WITH HOT WHEELS STAFF
+            </button>
+          )}
+        </div>
+
+        {/* Fine print */}
+        <div style={{fontSize:11, color:TEXT3, fontFamily:JOST, lineHeight:1.6, textAlign:"center", padding:"0 8px 24px"}}>
+          One prize per passport holder · Must be present at the Hot Wheels stand · Staff verification required
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [screen,setScreen]             = useState("splash");
@@ -976,6 +1101,7 @@ export default function App() {
   const [soloCompleted,setSolo]        = useState([]);
   const [votes,setVotes]               = useState({});
   const [uploads,setUploads]           = useState({});   // { taskId: dataURL }
+  const [hwClaimed,setHwClaimed]       = useState(false); // Hot Wheels challenge claimed
   const [bonusPoints,setBonus]         = useState(0);   // points added back after redemption bonus
   const [redeemedPts,setRedeemed]      = useState(0);   // total points spent on prizes
   const [activePin,setActivePin]       = useState(null);
@@ -1161,11 +1287,24 @@ export default function App() {
   if(screen==="splash")      return <SplashScreen onEnter={()=>setScreen("register")}/>;
   if(screen==="register")    return <RegisterScreen onRegister={u=>{setUser(u);saveRegistration(u);setScreen("main");}}/>;
 
+  // Hot Wheels PIN screen
+  if(screen==="hwpin") return (
+    <PinScreen
+      label="HOT WHEELS LEGENDS"
+      icon="🏎️"
+      pin="9999"
+      hasvote={false}
+      onSuccess={()=>{ setHwClaimed(true); setScreen("main"); setTab("hotwheels"); }}
+      onBack={()=>setScreen("main")}
+    />
+  );
+
   if(screen==="main") return (
     <div style={{position:"relative",minHeight:"100vh",background:BG}}>
       {tab==="passport"   && <PassportTab user={user} points={points} vendorStamps={vendorStamps} soloCompleted={soloCompleted} votes={votes} uploads={uploads} onCat={openCat} onSolo={openSoloPin} onSaveUpload={saveUpload} onSubmitDraw={()=>{setDrawDone(true);setScreen("draw");}} drawSubmitted={drawDone} onClaimPrizes={()=>setScreen("claimPrizes")}/>}
       {tab==="leaderboard" && <LeaderboardTab currentUser={{...user,id:userId}} currentPoints={points} leaderboard={leaderboard}/>}
       {tab==="explore"     && <ExploreTab/>}
+      {tab==="hotwheels"   && <HotWheelsTab claimed={hwClaimed} onClaim={()=>setScreen("hwpin")}/>}
       <BottomNav tab={tab} setTab={setTab}/>
     </div>
   );
