@@ -1005,24 +1005,28 @@ function HotWheelsTab({claimed, onClaim}) {
 
         {/* About */}
         <div style={{background:"#FFF", borderRadius:16, padding:"20px", marginBottom:16, boxShadow:SHADOW}}>
-          <div style={{fontSize:10, color:TEXT3, letterSpacing:"0.3em", fontFamily:MONO, marginBottom:10, textTransform:"uppercase"}}>About the Tour</div>
+          <div style={{fontSize:10, color:TEXT3, letterSpacing:"0.3em", fontFamily:MONO, marginBottom:10, textTransform:"uppercase"}}>What Is It?</div>
           <p style={{fontSize:14, color:TEXT1, lineHeight:1.7, fontFamily:JOST, fontWeight:400, margin:0}}>
-            The <strong>2026 Hot Wheels Legends Tour</strong> is back and better than ever — on the search for a custom vehicle worthy of becoming an official Hot Wheels® die-cast car.
+            Hot Wheels is hosting a <strong>free car meet</strong> at Rosehill Racecourse — and it's unlike any other. Custom car builders from across Australia have entered their builds for a chance at the ultimate prize.
           </p>
           <p style={{fontSize:14, color:TEXT2, lineHeight:1.7, fontFamily:JOST, fontWeight:400, margin:"12px 0 0"}}>
-            Custom car builders compete at local events across Australia and New Zealand for a chance to have their build immortalised as a real Hot Wheels die-cast. The winning car gets produced and sold worldwide.
+            One car will be selected by Hot Wheels judges to become an <strong>official Hot Wheels® die-cast</strong> — produced and sold to collectors worldwide. Come check out the builds, soak up the culture, and be part of the moment it's announced.
           </p>
+          <div style={{marginTop:14, background:BG, borderRadius:10, padding:"10px 14px", display:"flex", alignItems:"center", gap:8}}>
+            <span style={{fontSize:16}}>✅</span>
+            <span style={{fontSize:13, fontWeight:700, color:"#34C759", fontFamily:JOST}}>Free entry — open to everyone</span>
+          </div>
         </div>
 
         {/* Key details */}
         <div style={{background:"#FFF", borderRadius:16, padding:"20px", marginBottom:16, boxShadow:SHADOW}}>
           <div style={{fontSize:10, color:TEXT3, letterSpacing:"0.3em", fontFamily:MONO, marginBottom:14, textTransform:"uppercase"}}>Event Details</div>
           {[
-            {icon:"📍", label:"Location", value:"29 James Ruse Dr, Rosehill NSW 2142"},
-            {icon:"📅", label:"Date", value:"August 30, 2026"},
+            {icon:"📍", label:"Address", value:"29 James Ruse Dr, Rosehill NSW 2142"},
             {icon:"🏟️", label:"Venue", value:"Rosehill Racecourse, Sydney"},
-            {icon:"🏆", label:"Prize", value:"Your car becomes an official Hot Wheels® die-cast"},
-            {icon:"🔗", label:"Register", value:"hotwheelslegends.com", link:"https://hotwheelslegends.com/events/australia-new-zealand-au-2026"},
+            {icon:"📅", label:"Date", value:"August 30, 2026"},
+            {icon:"💰", label:"Entry", value:"Free — open to the public"},
+            {icon:"🔗", label:"More Info", value:"hotwheelslegends.com", link:"https://hotwheelslegends.com/events/australia-new-zealand-au-2026"},
           ].map(d=>(
             <div key={d.label} style={{display:"flex", gap:14, alignItems:"flex-start", marginBottom:14}}>
               <span style={{fontSize:20, flexShrink:0, marginTop:1}}>{d.icon}</span>
@@ -1050,12 +1054,12 @@ function HotWheelsTab({claimed, onClaim}) {
                 {claimed ? "CHALLENGE COMPLETE" : "AVAILABLE NOW"}
               </div>
               <div style={{fontSize:20, fontWeight:900, color:TEXT1, fontFamily:JOST, letterSpacing:"-0.02em", fontStyle:"italic"}}>
-                WIN A HOT WHEELS CAR 🏎️
+                GRAB A FREE HOT WHEELS CAR 🏎️
               </div>
               <div style={{fontSize:13, color:TEXT2, fontFamily:JOST, marginTop:4, lineHeight:1.5}}>
                 {claimed
-                  ? "You've completed the Hot Wheels Legends challenge. See the Hot Wheels stand to claim your prize."
-                  : "Visit the Hot Wheels Legends stand, complete the challenge, and get verified by Unmarked staff to win an exclusive die-cast car."}
+                  ? "You've already collected your free Hot Wheels car. See you at Rosehill on August 30!"
+                  : "Head to the Hot Wheels stand at Unmarked, grab your free die-cast car and get verified by Unmarked staff."}
               </div>
             </div>
           </div>
@@ -1093,28 +1097,28 @@ function HotWheelsTab({claimed, onClaim}) {
         <div style={{display:"flex", flexDirection:"column", gap:10, marginBottom:24}}>
           {[
             {
-              emoji:"🔍",
-              heading:"FIND THE STAND",
-              body:"Head to the Hot Wheels Legends stand here at Unmarked and check out the incredible custom car builds on display.",
+              emoji:"🚗",
+              heading:"A CAR MEET LIKE NO OTHER",
+              body:"Hot Wheels is throwing a free car meet — real builds, real culture, real community. No ticket needed. Just show up.",
               bg:"#E8002D",
             },
             {
-              emoji:"🏎️",
-              heading:"SHOW YOUR PASSION",
-              body:"Custom car builders from across Australia compete for a chance to have their build turned into a real Hot Wheels® die-cast car — sold worldwide.",
+              emoji:"👀",
+              heading:"CHECK OUT THE CUSTOM BUILDS",
+              body:"Some of Australia's most insane custom cars will be on display. Walk the floor, get up close, and see what Australian car culture is really about.",
               bg:"#FFD100",
               dark:true,
             },
             {
-              emoji:"🗳️",
-              heading:"VOTE FOR YOUR FAVOURITE",
-              body:"Think you know which car deserves to be immortalised? Cast your vote at the stand and help decide Australia's next Legends winner.",
+              emoji:"⚖️",
+              heading:"ONE CAR GETS CHOSEN",
+              body:"Hot Wheels judges will pick one car from the entire event. That car gets turned into an official Hot Wheels® die-cast and released to collectors worldwide.",
               bg:"#1A1A2E",
             },
             {
               emoji:"🏆",
-              heading:"THE WINNING CAR BECOMES A HOT WHEELS",
-              body:"The selected build goes into production as an official Hot Wheels® die-cast car. One car. One winner. Global release.",
+              heading:"BE THERE WHEN IT'S ANNOUNCED",
+              body:"The winning car is revealed on the day. You'll be able to say you were there when Australian car culture made history.",
               bg:"#0A0A0A",
             },
           ].map((card,i)=>(
