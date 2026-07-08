@@ -1018,8 +1018,9 @@ function HotWheelsTab({claimed, onClaim}) {
         <div style={{background:"#FFF", borderRadius:16, padding:"20px", marginBottom:16, boxShadow:SHADOW}}>
           <div style={{fontSize:10, color:TEXT3, letterSpacing:"0.3em", fontFamily:MONO, marginBottom:14, textTransform:"uppercase"}}>Event Details</div>
           {[
-            {icon:"📍", label:"Location", value:"Sydney Showground, Sydney Olympic Park"},
-            {icon:"📅", label:"Date", value:"25 – 26 July 2026"},
+            {icon:"📍", label:"Location", value:"29 James Ruse Dr, Rosehill NSW 2142"},
+            {icon:"📅", label:"Date", value:"August 30, 2026"},
+            {icon:"🏟️", label:"Venue", value:"Rosehill Racecourse, Sydney"},
             {icon:"🏆", label:"Prize", value:"Your car becomes an official Hot Wheels® die-cast"},
             {icon:"🔗", label:"Register", value:"hotwheelslegends.com", link:"https://hotwheelslegends.com/events/australia-new-zealand-au-2026"},
           ].map(d=>(
