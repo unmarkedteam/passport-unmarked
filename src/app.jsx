@@ -230,25 +230,35 @@ function SplashScreen({onEnter}) {
         <span style={S.splashBarcodeLabel}>UNMARKED.AU</span>
       </div>
 
-      {/* Main title */}
+      {/* Main content */}
       <div style={S.splashInner}>
         <div style={S.splashTransmission}>UNMARKED VOL. V — SYDNEY</div>
+
+        {/* Heading */}
         <h1 style={S.splashTitle}>PASSPORT</h1>
         <div style={S.splashColon}>:</div>
         <h1 style={S.splashSub}>UNMARKED</h1>
 
         {/* Date */}
-        <div style={{marginTop:20,display:"flex",alignItems:"center",gap:12}}>
+        <div style={{marginTop:16,display:"flex",alignItems:"center",gap:12}}>
           <div style={{height:1,width:24,background:"rgba(255,255,255,0.15)"}}/>
-          <span style={{fontSize:13,color:"rgba(255,255,255,0.5)",fontFamily:JOST,letterSpacing:"0.15em",fontWeight:500}}>25 – 26 JULY</span>
+          <span style={{fontSize:13,color:"rgba(255,255,255,0.5)",fontFamily:JOST,letterSpacing:"0.15em",fontWeight:500}}>25 – 26 JULY · SYDNEY SHOWGROUND</span>
           <div style={{height:1,width:24,background:"rgba(255,255,255,0.15)"}}/>
         </div>
 
-        <p style={S.splashTag}>Complete tasks · Earn entries · Win the draw</p>
+        {/* Passport image */}
+        <div style={{width:"100%",maxWidth:320,margin:"28px auto 0",position:"relative"}}>
+          <img
+            src="https://cdn.shopify.com/s/files/1/0619/3204/4438/files/unmarked_pasport_ASSCII.png?v=1783499232"
+            alt="Passport: Unmarked"
+            style={{width:"100%",height:"auto",display:"block",filter:"drop-shadow(0 0 40px rgba(0,150,255,0.25))"}}
+          />
+        </div>
+
         <PrimaryBtn onClick={onEnter} style={{marginTop:28}}>ACTIVATE PASSPORT →</PrimaryBtn>
 
         {/* Sponsors */}
-        <div style={{marginTop:28,paddingTop:20,borderTop:"1px solid rgba(255,255,255,0.08)",width:"100%",textAlign:"center"}}>
+        <div style={{marginTop:24,paddingTop:20,borderTop:"1px solid rgba(255,255,255,0.08)",width:"100%",textAlign:"center"}}>
           <div style={{fontSize:9,color:"rgba(255,255,255,0.25)",letterSpacing:"0.3em",fontFamily:JOST,marginBottom:10,textTransform:"uppercase"}}>Proudly Sponsored By</div>
           <div style={{display:"flex",justifyContent:"center",gap:20,alignItems:"center"}}>
             <span style={{fontSize:12,fontWeight:700,color:"rgba(255,255,255,0.5)",letterSpacing:"0.15em",fontFamily:JOST,textTransform:"uppercase"}}>LUMIX</span>
