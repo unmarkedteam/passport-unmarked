@@ -160,12 +160,17 @@ const Eyebrow = ({children, color}) => <div style={{...S.eyebrow,...(color?{colo
 const PrimaryBtn = ({children, onClick, style={}}) => (
   <button style={{...S.primaryBtn,...style}} onClick={onClick}>{children}</button>
 );
-const TopBar = ({title, onBack, right}) => (
+const TopBar = ({title, onBack, right, onSettings}) => (
   <div style={S.topBar}>
     {onBack ? <button style={S.topBarBack} onClick={onBack}>←</button>
              : <img src={LOGO_URL} alt="" style={S.topBarLogo}/>}
     <span style={S.topBarTitle}>{title||"PASSPORT : UNMARKED"}</span>
-    {onBack ? <div style={{width:36}}>{right}</div> : <div style={{width:26}}/>}
+    {onBack
+      ? <div style={{width:36}}>{right}</div>
+      : onSettings
+        ? <button style={{background:"none",border:"none",cursor:"pointer",fontSize:18,padding:"0 4px",width:36}} onClick={onSettings}>⚙️</button>
+        : <div style={{width:36}}/>
+    }
   </div>
 );
 
@@ -262,6 +267,98 @@ function SplashScreen({onEnter}) {
   );
 }
 
+// ─── SIGN IN SCREEN ───────────────────────────────────────────────────────────
+function SignInScreen({onSignIn, onNewAccount}) {
+  const [phone, setPhone] = useState("");
+  const [err,   setErr]   = useState("");
+  const [loading,setLoading] = useState(false);
+
+  const signIn = async () => {
+    if(!phone.trim()){setErr("Please enter your phone number.");return;}
+    setLoading(true);
+    try {
+      const { data } = await supabase
+        .from("registrations")
+        .select("*")
+        .eq("phone", phone.trim())
+        .single();
+      if(data) {
+        onSignIn(data);
+      } else {
+        setErr("No account found with that number. Try registering instead.");
+      }
+    } catch {
+      setErr("No account found. Try registering instead.");
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div style={S.screen}>
+      <TopBar/>
+      <div style={S.pad}>
+        <Eyebrow>WELCOME BACK</Eyebrow>
+        <h2 style={S.pageTitle}>SIGN IN</h2>
+        <p style={S.pageSub}>Enter your phone number to restore your passport.</p>
+        <div style={{height:24}}/>
+        <div style={S.field}>
+          <label style={S.fieldLbl}>PHONE NUMBER</label>
+          <input
+            style={S.fieldInput}
+            type="tel"
+            placeholder="04XX XXX XXX"
+            value={phone}
+            onChange={e=>setPhone(e.target.value)}
+            onKeyDown={e=>e.key==="Enter"&&signIn()}
+          />
+        </div>
+        {err && <div style={S.errMsg}>{err}</div>}
+        <PrimaryBtn onClick={signIn} style={{marginTop:8}}>
+          {loading ? "FINDING YOUR PASSPORT..." : "SIGN IN →"}
+        </PrimaryBtn>
+        <button
+          style={{width:"100%",background:"none",border:`1.5px solid ${EDGE}`,color:TEXT2,padding:"16px",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:JOST,borderRadius:12,marginTop:10}}
+          onClick={onNewAccount}
+        >
+          New here? Create an account →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── T&C SECTION ──────────────────────────────────────────────────────────────
+function TandCSection() {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div style={{marginTop:20,borderTop:`1px solid ${EDGE}`,paddingTop:16}}>
+      <div style={{fontSize:12,color:TEXT2,fontFamily:JOST,lineHeight:1.6}}>
+        By applying you accept all{" "}
+        <button
+          style={{background:"none",border:"none",color:TEXT1,fontFamily:JOST,fontSize:12,fontWeight:700,cursor:"pointer",padding:0,textDecoration:"underline"}}
+          onClick={()=>setExpanded(e=>!e)}
+        >
+          terms and conditions
+        </button>
+        {" "}including marketing from Unmarked and its partners.
+      </div>
+      {expanded && (
+        <div style={{marginTop:12,background:BG,borderRadius:10,padding:"14px 16px",fontSize:11,color:TEXT2,fontFamily:JOST,lineHeight:1.8}}>
+          <strong style={{color:TEXT1,fontSize:12}}>Terms & Conditions</strong><br/><br/>
+          By registering for Passport: Unmarked, you agree to the following:<br/><br/>
+          <strong>Marketing:</strong> You consent to receive marketing communications from Unmarked and its event partners. You may opt out at any time.<br/><br/>
+          <strong>Data:</strong> Your name, phone number and email are stored securely. Your data will never be sold to third parties.<br/><br/>
+          <strong>Prize Draw:</strong> Points earned are used to determine draw entries. The draw is conducted by Unmarked staff at the end of the event. The decision is final.<br/><br/>
+          <strong>Prizes:</strong> Prizes must be claimed on the day. Unclaimed prizes are forfeited. No cash alternatives.<br/><br/>
+          <strong>Account:</strong> You may delete your account at any time via the settings menu. This will remove all data permanently.<br/><br/>
+          To opt out or request data removal contact{" "}
+          <a href="mailto:team@unmarked.au" style={{color:TEXT1,fontWeight:700}}>team@unmarked.au</a>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── REGISTER ─────────────────────────────────────────────────────────────────
 function RegisterScreen({onRegister}) {
   const [form, setForm] = useState({name:"",phone:"",email:"",instagram:""});
@@ -291,16 +388,14 @@ function RegisterScreen({onRegister}) {
         ))}
         {err && <div style={S.errMsg}>{err}</div>}
         <PrimaryBtn onClick={submit} style={{marginTop:8}}>ACTIVATE PASSPORT →</PrimaryBtn>
-        <div style={S.disclaimer}>
-          By activating your passport you agree to receive future updates and marketing from Unmarked. Your details will never be shared with third parties. You can opt out at any time by contacting us at team@unmarked.au
-        </div>
+        <TandCSection/>
       </div>
     </div>
   );
 }
 
 // ─── PASSPORT TAB ─────────────────────────────────────────────────────────────
-function PassportTab({user, points, vendorStamps, soloCompleted, votes, uploads, onCat, onSolo, onSaveUpload, onSubmitDraw, drawSubmitted, onClaimPrizes}) {
+function PassportTab({user, points, vendorStamps, soloCompleted, votes, uploads, onCat, onSolo, onSaveUpload, onSubmitDraw, drawSubmitted, onClaimPrizes, onSettings}) {
   const done      = totalDone(vendorStamps, soloCompleted);
   const eligible  = done >= REQUIRED;
   const progress  = Math.min(done/REQUIRED, 1);
@@ -309,7 +404,7 @@ function PassportTab({user, points, vendorStamps, soloCompleted, votes, uploads,
 
   return (
     <div style={{...S.screen, paddingBottom:120}}>
-      <TopBar/>
+      <TopBar onSettings={onSettings}/>
 
       {/* Hero */}
       <div style={S.heroCard}>
@@ -1157,12 +1252,64 @@ function HotWheelsTab({claimed, onClaim}) {
   );
 }
 
+
+// ─── SETTINGS MODAL ──────────────────────────────────────────────────────────
+function SettingsModal({user, onLogout, onDelete, onClose}) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.5)",zIndex:200,display:"flex",alignItems:"flex-end",justifyContent:"center"}}
+      onClick={onClose}>
+      <div style={{background:"#FFF",borderRadius:"20px 20px 0 0",padding:"28px 24px 48px",width:"100%",maxWidth:500,boxShadow:"0 -8px 40px rgba(0,0,0,0.15)"}}
+        onClick={e=>e.stopPropagation()}>
+        {/* Handle */}
+        <div style={{width:36,height:4,background:"#E0E0E0",borderRadius:2,margin:"0 auto 24px"}}/>
+        <div style={{fontSize:18,fontWeight:800,color:TEXT1,fontFamily:JOST,marginBottom:4}}>Account</div>
+        <div style={{fontSize:13,color:TEXT2,fontFamily:JOST,marginBottom:24}}>{user?.name} · {user?.phone}</div>
+
+        {/* Logout */}
+        <button
+          style={{width:"100%",background:BG,border:`1.5px solid ${EDGE}`,color:TEXT1,padding:"16px",fontSize:14,fontWeight:700,letterSpacing:"0.02em",cursor:"pointer",fontFamily:JOST,borderRadius:12,marginBottom:10,textAlign:"left",display:"flex",alignItems:"center",gap:12}}
+          onClick={onLogout}
+        >
+          <span style={{fontSize:20}}>🚪</span> Log Out
+        </button>
+
+        {/* Delete account */}
+        {!confirmDelete ? (
+          <button
+            style={{width:"100%",background:"#FFF0F0",border:"1.5px solid #FFD0D0",color:"#FF3B30",padding:"16px",fontSize:14,fontWeight:700,letterSpacing:"0.02em",cursor:"pointer",fontFamily:JOST,borderRadius:12,marginBottom:20,textAlign:"left",display:"flex",alignItems:"center",gap:12}}
+            onClick={()=>setConfirmDelete(true)}
+          >
+            <span style={{fontSize:20}}>🗑️</span> Delete My Account
+          </button>
+        ) : (
+          <div style={{background:"#FFF0F0",border:"1.5px solid #FF3B30",borderRadius:12,padding:"16px",marginBottom:20}}>
+            <div style={{fontSize:14,fontWeight:700,color:"#FF3B30",fontFamily:JOST,marginBottom:8}}>Are you sure?</div>
+            <div style={{fontSize:12,color:TEXT2,fontFamily:JOST,marginBottom:14,lineHeight:1.5}}>This will permanently delete your passport, all points and progress. This cannot be undone.</div>
+            <div style={{display:"flex",gap:8}}>
+              <button style={{flex:1,background:"#FF3B30",border:"none",color:"#FFF",padding:"12px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:JOST,borderRadius:8}} onClick={onDelete}>Yes, Delete</button>
+              <button style={{flex:1,background:BG,border:`1px solid ${EDGE}`,color:TEXT1,padding:"12px",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:JOST,borderRadius:8}} onClick={()=>setConfirmDelete(false)}>Cancel</button>
+            </div>
+          </div>
+        )}
+
+        {/* T&Cs */}
+        <div style={{fontSize:11,color:TEXT3,fontFamily:JOST,lineHeight:1.7,borderTop:`1px solid ${EDGE}`,paddingTop:16}}>
+          <strong style={{color:TEXT2}}>Terms & Conditions</strong><br/>
+          By using Passport: Unmarked you agree to receive marketing communications from Unmarked and its partners. Your data is stored securely and will never be sold to third parties. You may opt out at any time by deleting your account or contacting team@unmarked.au
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function App() {
-  const [screen,setScreen]             = useState("splash");
+  const [screen,setScreen]             = useState("splash");  // splash | signin | register | main | ...
   const [tab,setTab]                   = useState("passport");
   const [user,setUser]                 = useState(null);
   const [userId,setUserId]             = useState(null);
+  const [showSettings,setShowSettings] = useState(false);
   const [vendorStamps,setStamps]       = useState({});
   const [soloCompleted,setSolo]        = useState([]);
   const [votes,setVotes]               = useState({});
@@ -1180,11 +1327,37 @@ export default function App() {
   const points       = Math.max(0, rawPoints - redeemedPts);
   const currentPrize = getPrize(points);
 
+  // ── Restore session from localStorage on mount ───────────────────────────
+  useEffect(() => {
+    const saved = localStorage.getItem("unmarked_user");
+    if(saved) {
+      try {
+        const u = JSON.parse(saved);
+        setUser(u);
+        const uid = u.phone.replace(/\s+/g,"");
+        setUserId(uid);
+        // Restore progress from Supabase
+        supabase.from("entries").select("*").eq("id", uid).single()
+          .then(({ data }) => {
+            if(data) {
+              setStamps(data.vendor_stamps || {});
+              setSolo(data.solo_completed || []);
+              setDrawDone(data.draw_submitted || false);
+              setRedeemed(data.redeemed_points || 0);
+              setUploads(data.uploads || {});
+            }
+          });
+        setScreen("main");
+      } catch(e) { localStorage.removeItem("unmarked_user"); }
+    }
+  }, []);
+
   // ── Supabase: save registration ──────────────────────────────────────────
   const saveRegistration = useCallback(async (userData) => {
     // Use phone as stable unique ID
     const uid = userData.phone.replace(/\s+/g, "");
     setUserId(uid);
+    localStorage.setItem("unmarked_user", JSON.stringify(userData));
 
     // Check if they already have progress saved
     try {
@@ -1259,7 +1432,45 @@ export default function App() {
   }, [user, points, drawDone, userId, vendorStamps, soloCompleted, redeemedPts, uploads]);
 
   // ── Navigation helpers ────────────────────────────────────────────────────
-  const openCat       = cat          => { setActiveCat(cat); setScreen("category"); };
+  const openCat = cat => { setActiveCat(cat); setScreen("category"); };
+
+  const handleLogout = () => {
+    localStorage.removeItem("unmarked_user");
+    setUser(null); setUserId(null); setStamps({}); setSolo([]);
+    setDrawDone(false); setRedeemed(0); setUploads({});
+    setHwClaimed(false); setShowSettings(false);
+    setScreen("signin");
+  };
+
+  const handleSignIn = async (registrationData) => {
+    const u = registrationData;
+    setUser(u);
+    const uid = u.phone.replace(/\s+/g,"");
+    setUserId(uid);
+    localStorage.setItem("unmarked_user", JSON.stringify(u));
+    // Restore progress from Supabase
+    try {
+      const { data } = await supabase.from("entries").select("*").eq("id", uid).single();
+      if(data) {
+        setStamps(data.vendor_stamps || {});
+        setSolo(data.solo_completed || []);
+        setDrawDone(data.draw_submitted || false);
+        setRedeemed(data.redeemed_points || 0);
+        setUploads(data.uploads || {});
+      }
+    } catch {}
+    setScreen("main");
+  };
+
+  const handleDeleteAccount = async () => {
+    if(!userId) return;
+    await supabase.from("entries").delete().eq("id", userId);
+    localStorage.removeItem("unmarked_user");
+    setUser(null); setUserId(null); setStamps({}); setSolo([]);
+    setDrawDone(false); setRedeemed(0); setUploads({});
+    setHwClaimed(false); setShowSettings(false);
+    setScreen("splash");
+  };
   const openVendorPin = (cat,vendor) => {
     setActivePin({label:vendor.name,icon:cat.icon,pin:vendor.pin,earnedPts:vendor.points,targetId:vendor.id,type:"vendor"});
     setScreen("pin");
@@ -1350,7 +1561,8 @@ export default function App() {
   const showMainTabs = screen==="main";
 
   // ── Screens ───────────────────────────────────────────────────────────────
-  if(screen==="splash")      return <SplashScreen onEnter={()=>setScreen("register")}/>;
+  if(screen==="splash")      return <><FontLoader/><SplashScreen onEnter={()=>setScreen("register")}/></>;
+  if(screen==="signin")      return <SignInScreen onSignIn={handleSignIn} onNewAccount={()=>setScreen("register")}/>;
   if(screen==="register")    return <RegisterScreen onRegister={u=>{setUser(u);saveRegistration(u);setScreen("main");}}/>;
 
   // Hot Wheels PIN screen
@@ -1367,11 +1579,12 @@ export default function App() {
 
   if(screen==="main") return (
     <div style={{position:"relative",minHeight:"100vh",background:BG}}>
-      {tab==="passport"   && <PassportTab user={user} points={points} vendorStamps={vendorStamps} soloCompleted={soloCompleted} votes={votes} uploads={uploads} onCat={openCat} onSolo={openSoloPin} onSaveUpload={saveUpload} onSubmitDraw={()=>{setDrawDone(true);setScreen("draw");}} drawSubmitted={drawDone} onClaimPrizes={()=>setScreen("claimPrizes")}/>}
+      {tab==="passport"   && <PassportTab user={user} points={points} vendorStamps={vendorStamps} soloCompleted={soloCompleted} votes={votes} uploads={uploads} onCat={openCat} onSolo={openSoloPin} onSaveUpload={saveUpload} onSubmitDraw={()=>{setDrawDone(true);setScreen("draw");}} drawSubmitted={drawDone} onClaimPrizes={()=>setScreen("claimPrizes")} onSettings={()=>setShowSettings(true)}/>}
       {tab==="leaderboard" && <LeaderboardTab currentUser={{...user,id:userId}} currentPoints={points} leaderboard={leaderboard}/>}
       {tab==="explore"     && <ExploreTab/>}
       {tab==="hotwheels"   && <HotWheelsTab claimed={hwClaimed} onClaim={()=>setScreen("hwpin")}/>}
       <BottomNav tab={tab} setTab={setTab}/>
+      {showSettings && <SettingsModal user={user} onLogout={handleLogout} onDelete={handleDeleteAccount} onClose={()=>setShowSettings(false)}/>}
     </div>
   );
 
