@@ -1059,7 +1059,7 @@ function HotWheelsTab({claimed, onClaim}) {
               <div style={{fontSize:13, color:TEXT2, fontFamily:JOST, marginTop:4, lineHeight:1.5}}>
                 {claimed
                   ? "You've already collected your free Hot Wheels car. See you at Rosehill on August 30!"
-                  : "Head to the Hot Wheels stand at Unmarked, grab your free die-cast car and get verified by Unmarked staff."}
+                  : "Head to the Hot Wheels stand, get verified, successfully complete the challenge and you'll receive a free Hot Wheels die-cast. Available whilst stock lasts."}
               </div>
             </div>
           </div>
