@@ -246,14 +246,21 @@ function SplashScreen({onEnter}) {
           <div style={{height:1,width:24,background:"rgba(255,255,255,0.15)"}}/>
         </div>
 
-        {/* Passport image */}
-        <div style={{width:"100%",maxWidth:320,margin:"28px auto 0",position:"relative"}}>
-          <img
-            src="https://cdn.shopify.com/s/files/1/0619/3204/4438/files/unmarked_pasport_ASSCII.png?v=1783499232"
-            alt="Passport: Unmarked"
-            style={{width:"100%",height:"auto",display:"block",filter:"drop-shadow(0 0 40px rgba(0,150,255,0.25))"}}
-          />
-        </div>
+        {/* Passport image — blended into grid background */}
+        <img
+          src="https://cdn.shopify.com/s/files/1/0619/3204/4438/files/unmarked_pasport_ASSCII.png?v=1783499232"
+          alt="Passport: Unmarked"
+          style={{
+            width:"100%",
+            maxWidth:340,
+            height:"auto",
+            display:"block",
+            margin:"20px auto 0",
+            mixBlendMode:"screen",
+            filter:"drop-shadow(0 0 60px rgba(0,120,255,0.3))",
+            opacity:0.95,
+          }}
+        />
 
         <PrimaryBtn onClick={onEnter} style={{marginTop:28}}>ACTIVATE PASSPORT →</PrimaryBtn>
 
@@ -817,7 +824,7 @@ function PinScreen({label, icon, pin:correctPin, hasvote, onSuccess, onBack}) {
 }
 
 // ─── PRIZE CLAIM SCREEN ───────────────────────────────────────────────────────
-function ClaimPrizesScreen({points, onSuccess, onBack}) {
+function ClaimPrizesScreen({points, claimedPrizes=[], onSuccess, onBack}) {
   const [pin,setPin]     = useState("");
   const [err,setErr]     = useState("");
   const [shake,setShake] = useState(false);
@@ -855,19 +862,32 @@ function ClaimPrizesScreen({points, onSuccess, onBack}) {
 
       {/* All unlocked prizes */}
       <div style={{padding:"0 16px 16px"}}>
-        {PRIZES.filter(p=>points>=p.pts).reverse().map(p=>(
-          <div key={p.pts} style={S.claimTierRow}>
-            <span>{p.icon}</span>
-            <span style={{color:"#FFF",fontSize:13,fontFamily:JOST,fontWeight:700,letterSpacing:"0.01em"}}>{p.label}</span>
-            <span style={{color:"rgba(255,255,255,0.4)",fontSize:11,fontFamily:JOST,flex:1,paddingLeft:6}}>{p.desc}</span>
-            <span style={{color:ACCENT,fontSize:12,fontFamily:JOST,fontWeight:700}}>{p.pts}pts</span>
-          </div>
-        ))}
+        {PRIZES.filter(p=>points>=p.pts).reverse().map(p=>{
+          const alreadyDone = claimedPrizes.includes(p.pts);
+          return (
+            <div key={p.pts} style={{...S.claimTierRow, opacity: alreadyDone ? 0.4 : 1}}>
+              <span>{p.icon}</span>
+              <span style={{color:"#FFF",fontSize:13,fontFamily:JOST,fontWeight:700,letterSpacing:"0.01em"}}>{p.label}</span>
+              <span style={{color:"rgba(255,255,255,0.4)",fontSize:11,fontFamily:JOST,flex:1,paddingLeft:6}}>{p.desc}</span>
+              {alreadyDone
+                ? <span style={{color:"#34C759",fontSize:11,fontFamily:JOST,fontWeight:700}}>CLAIMED ✓</span>
+                : <span style={{color:ACCENT,fontSize:12,fontFamily:JOST,fontWeight:700}}>{p.pts}pts</span>
+              }
+            </div>
+          );
+        })}
       </div>
 
-      <div style={{textAlign:"center",padding:"0 24px 12px"}}>
-        <div style={{fontSize:12,color:TEXT2,fontFamily:JOST,letterSpacing:"0.05em",fontWeight:600,textTransform:"uppercase"}}>Staff: Enter Redemption PIN</div>
-      </div>
+      {claimedPrizes.includes(getPrize(points)?.pts) ? (
+        <div style={{margin:"0 16px 16px",background:"#F5FFF0",border:"1px solid rgba(52,199,89,0.3)",borderRadius:12,padding:"16px",textAlign:"center"}}>
+          <div style={{fontSize:14,fontWeight:700,color:"#34C759",fontFamily:JOST}}>✓ This prize has already been claimed</div>
+          <div style={{fontSize:12,color:TEXT2,fontFamily:JOST,marginTop:4}}>Keep earning points to unlock a higher tier prize</div>
+        </div>
+      ) : (
+        <div style={{textAlign:"center",padding:"0 24px 12px"}}>
+          <div style={{fontSize:12,color:TEXT2,fontFamily:JOST,letterSpacing:"0.05em",fontWeight:600,textTransform:"uppercase"}}>Staff: Enter Redemption PIN</div>
+        </div>
+      )}
 
       <div style={{...S.dots,...(shake?{animation:"shake .3s"}:{})}}>
         {[0,1,2,3].map(i=>(<div key={i} style={{...S.dot,...(pin.length>i?S.dotFilled:{})}}/>))}
@@ -1325,6 +1345,7 @@ export default function App() {
   const [votes,setVotes]               = useState({});
   const [uploads,setUploads]           = useState({});   // { taskId: dataURL }
   const [hwClaimed,setHwClaimed]       = useState(false); // Hot Wheels challenge claimed
+  const [claimedPrizes,setClaimedPrizes] = useState([]); // prize pts already redeemed e.g. [9, 18]
   const [bonusPoints,setBonus]         = useState(0);   // points added back after redemption bonus
   const [redeemedPts,setRedeemed]      = useState(0);   // total points spent on prizes
   const [activePin,setActivePin]       = useState(null);
@@ -1355,6 +1376,19 @@ export default function App() {
               setDrawDone(data.draw_submitted || false);
               setRedeemed(data.redeemed_points || 0);
               setUploads(data.uploads || {});
+            }
+            // Also restore from localStorage backup (more reliable)
+            const local = localStorage.getItem(`unmarked_progress_${uid}`);
+            if(local) {
+              try {
+                const p = JSON.parse(local);
+                // Use whichever has more stamps (prefer local backup if Supabase failed to save)
+                if(Object.keys(p.vendorStamps||{}).length >= Object.keys(data?.vendor_stamps||{}).length) {
+                  setStamps(p.vendorStamps || {});
+                  setSolo(p.soloCompleted || []);
+                }
+                setClaimedPrizes(p.claimedPrizes || []);
+              } catch {}
             }
           });
         setScreen("main");
@@ -1422,6 +1456,13 @@ export default function App() {
     const interval = setInterval(loadLeaderboard, 10000);
     return () => clearInterval(interval);
   }, [loadLeaderboard]);
+
+  // ── Save progress to localStorage as backup (works offline) ─────────────
+  useEffect(() => {
+    if(!userId) return;
+    const progress = { vendorStamps, soloCompleted, redeemedPts, claimedPrizes, drawDone };
+    localStorage.setItem(`unmarked_progress_${userId}`, JSON.stringify(progress));
+  }, [vendorStamps, soloCompleted, redeemedPts, claimedPrizes, drawDone, userId]);
 
   // ── Supabase: push own entry when points change ───────────────────────────
   useEffect(() => {
@@ -1546,8 +1587,12 @@ export default function App() {
   const claimSuccess = async () => {
     const prize = getPrize(points);
     if(!prize) return;
+    // Prevent re-claiming same prize tier
+    if(claimedPrizes.includes(prize.pts)) return;
     const newRedeemed = redeemedPts + prize.pts;
+    const newClaimed = [...claimedPrizes, prize.pts];
     setRedeemed(newRedeemed);
+    setClaimedPrizes(newClaimed);
     setLast({prizeMode:true, prize});
     // Save immediately to Supabase so refresh doesn't undo it
     if(userId) {
@@ -1601,7 +1646,7 @@ export default function App() {
   if(screen==="category")    return <CategoryScreen cat={activeCat} vendorStamps={vendorStamps} onVendor={openVendorPin} onBack={()=>setScreen("main")}/>;
   if(screen==="pin")         return <PinScreen label={activePin.label} icon={activePin.icon} pin={activePin.pin} hasvote={activePin.hasvote} onSuccess={pinSuccess} onBack={()=>setScreen(activeCat&&activePin?.type==="vendor"?"category":"main")}/>;
   if(screen==="success")     return <SuccessScreen label={lastSuccess.label} icon={lastSuccess.icon} earnedPts={lastSuccess.earnedPts} totalPoints={points} onContinue={()=>setScreen(activeCat&&activePin?.type==="vendor"?"category":"main")}/>;
-  if(screen==="claimPrizes") return <ClaimPrizesScreen points={points} onSuccess={claimSuccess} onBack={()=>setScreen("main")}/>;
+  if(screen==="claimPrizes") return <ClaimPrizesScreen points={points} claimedPrizes={claimedPrizes} onSuccess={claimSuccess} onBack={()=>setScreen("main")}/>;
   if(screen==="prizeClaimed"){
     const prize = getPrize(rawPoints - redeemedPts + (currentPrize?.pts||0) - (currentPrize?.pts||0));
     return <PrizeClaimedScreen prize={currentPrize} remainingPoints={points - (currentPrize?.pts||0)} onContinue={()=>setScreen("main")}/>;
