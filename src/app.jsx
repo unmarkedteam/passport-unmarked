@@ -1406,24 +1406,36 @@ function VoteTab({userId}) {
     const saved = localStorage.getItem(\`unmarked_vote_\${userId}\`);
     if(saved) setVoted(saved);
 
-    fetch(SHEET_URL)
-      .then(r => r.text())
+    const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(SHEET_URL);
+    fetch(proxyUrl)
+      .then(r => { if(!r.ok) throw new Error("failed"); return r.text(); })
       .then(text => {
         const rows = parseCSV(text);
-        const mapped = rows.map((r, i) => ({
-          id: \`\${r["Order Name"]||i}\`,
-          first_name: r["Matched Applicant (Raz List)"].split(" ")[0].charAt(0).toUpperCase() + r["Matched Applicant (Raz List)"].split(" ")[0].slice(1).toLowerCase(),
-          car_model: r["Vehicle"],
-          day: r["Pass"] || "",
-          votes: 0,
-        })).sort((a,b) => a.first_name.localeCompare(b.first_name));
+        const mapped = rows
+          .map((r, i) => {
+            const matchedName = r["Matched Applicant (Raz List)"] || r["Customer (Order)"] || "";
+            const firstName = matchedName.split(" ")[0];
+            const titleName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+            return {
+              id: (r["Order Name"] || String(i)),
+              first_name: titleName,
+              car_model: r["Vehicle"] || "",
+              day: r["Pass"] || "",
+              votes: 0,
+            };
+          })
+          .filter(r => r.first_name && r.car_model)
+          .sort((a,b) => a.first_name.localeCompare(b.first_name));
         setCars(mapped);
         setLoading(false);
       })
       .catch(() => {
-        // Fallback to Supabase if sheet unavailable
         supabase.from("cars").select("id,first_name,car_model,day,votes").eq("active", true).order("first_name")
-          .then(({ data }) => { if(data) setCars(data.map(c=>({...c,id:String(c.id)}))); setLoading(false); });
+          .then(({ data }) => {
+            if(data && data.length > 0) setCars(data.map(c=>({...c,id:String(c.id)})));
+            setLoading(false);
+          })
+          .catch(() => setLoading(false));
       });
   }, [userId]);
 
