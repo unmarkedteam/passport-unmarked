@@ -198,9 +198,12 @@ function BottomNav({tab, setTab}) {
             onClick={e=>e.stopPropagation()}>
             <div style={{width:36,height:4,background:EDGE,borderRadius:2,margin:"0 auto 24px"}}/>
             <div style={{fontSize:11,color:TEXT3,letterSpacing:"0.2em",fontFamily:MONO,marginBottom:8,textTransform:"uppercase"}}>Confirm Your Vote</div>
-            <div style={{fontSize:20,fontWeight:900,color:TEXT1,fontFamily:JOST,letterSpacing:"-0.02em",marginBottom:6,fontStyle:"italic"}}>
+            <div style={{fontSize:20,fontWeight:900,color:TEXT1,fontFamily:JOST,letterSpacing:"-0.02em",marginBottom:4,fontStyle:"italic"}}>
               {pendingVote.first_name.toUpperCase()}'S {pendingVote.car_model.toUpperCase()}
             </div>
+            {pendingVote.instagram && (
+              <div style={{fontSize:12,color:TEXT3,fontFamily:MONO,marginBottom:20}}>@{pendingVote.instagram}</div>
+            )}
             <div style={{fontSize:13,color:TEXT2,fontFamily:JOST,marginBottom:24,lineHeight:1.5}}>
               This is your one vote. You can't change it after confirming.
             </div>
@@ -1590,9 +1593,14 @@ function VoteTab({userId}) {
               >
                 <div style={{fontSize:22,flexShrink:0}}>🚗</div>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:15,fontWeight:800,color:isVoted?"#FFF":TEXT1,fontFamily:JOST,letterSpacing:"-0.01em"}}>
+                  <div style={{fontSize:15,fontWeight:800,color:isVoted?"#FFF":TEXT1,fontFamily:JOST,letterSpacing:"-0.01em",marginBottom:car.instagram?3:0}}>
                     {car.first_name.toUpperCase()}'S {car.car_model.toUpperCase()}
                   </div>
+                  {car.instagram && (
+                    <div style={{fontSize:11,color:isVoted?"rgba(255,255,255,0.4)":TEXT3,fontFamily:MONO,letterSpacing:"0.05em"}}>
+                      @{car.instagram}
+                    </div>
+                  )}
                 </div>
                 {isVoted ? (
                   <div style={{background:ACCENT,color:"#000",borderRadius:20,padding:"4px 12px",fontSize:11,fontWeight:800,fontFamily:JOST,flexShrink:0}}>
