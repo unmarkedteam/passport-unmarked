@@ -190,6 +190,35 @@ function BottomNav({tab, setTab}) {
           <span style={S.navLabel}>{t.label}</span>
         </button>
       ))}
+      {/* Confirm vote modal */}
+      {pendingVote && (
+        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:200,display:"flex",alignItems:"flex-end",justifyContent:"center"}}
+          onClick={()=>setPendingVote(null)}>
+          <div style={{background:CARD,borderRadius:"20px 20px 0 0",padding:"28px 24px 48px",width:"100%",maxWidth:500,boxShadow:"0 -8px 40px rgba(0,0,0,0.2)"}}
+            onClick={e=>e.stopPropagation()}>
+            <div style={{width:36,height:4,background:EDGE,borderRadius:2,margin:"0 auto 24px"}}/>
+            <div style={{fontSize:11,color:TEXT3,letterSpacing:"0.2em",fontFamily:MONO,marginBottom:8,textTransform:"uppercase"}}>Confirm Your Vote</div>
+            <div style={{fontSize:20,fontWeight:900,color:TEXT1,fontFamily:JOST,letterSpacing:"-0.02em",marginBottom:6,fontStyle:"italic"}}>
+              {pendingVote.first_name.toUpperCase()}'S {pendingVote.car_model.toUpperCase()}
+            </div>
+            <div style={{fontSize:13,color:TEXT2,fontFamily:JOST,marginBottom:24,lineHeight:1.5}}>
+              This is your one vote. You can't change it after confirming.
+            </div>
+            <button
+              style={{width:"100%",background:"#1C1C1E",color:"#FFF",border:"none",padding:"17px",fontSize:14,fontWeight:800,letterSpacing:"0.08em",cursor:"pointer",fontFamily:JOST,borderRadius:14,marginBottom:10,textTransform:"uppercase"}}
+              onClick={()=>{ submitVote(pendingVote); setPendingVote(null); }}
+            >
+              ✓ CONFIRM VOTE
+            </button>
+            <button
+              style={{width:"100%",background:"none",border:`1.5px solid ${EDGE}`,color:TEXT2,padding:"15px",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:JOST,borderRadius:14,textTransform:"uppercase"}}
+              onClick={()=>setPendingVote(null)}
+            >
+              CANCEL
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1380,8 +1409,9 @@ function VoteTab({userId}) {
   const [voted, setVoted]       = useState(null);
   const [search, setSearch]     = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [activeDay, setActiveDay]   = useState("saturday"); // "saturday" | "both"
+  const [activeDay, setActiveDay]   = useState("saturday");
   const [selectedDay, setSelectedDay] = useState("saturday");
+  const [pendingVote, setPendingVote] = useState(null); // car waiting for confirmation
 
   useEffect(() => {
     // Load which day is active from Supabase settings
@@ -1556,7 +1586,7 @@ function VoteTab({userId}) {
                   cursor: voted ? "default" : "pointer",
                   transition:"all 0.2s",
                 }}
-                onClick={()=>!voted && submitVote(car)}
+                onClick={()=>!voted && !submitting && setPendingVote(car)}
               >
                 <div style={{fontSize:22,flexShrink:0}}>🚗</div>
                 <div style={{flex:1,minWidth:0}}>
