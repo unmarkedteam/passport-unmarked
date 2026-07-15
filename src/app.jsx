@@ -1446,7 +1446,7 @@ function VoteTab({userId}) {
   };
 
   useEffect(() => {
-    const saved = localStorage.getItem(\`unmarked_vote_\${userId}\`);
+    const saved = localStorage.getItem(`unmarked_vote_${userId}`);
     if(saved) setVoted(saved);
 
     const proxyUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(SHEET_URL);
@@ -1491,7 +1491,7 @@ function VoteTab({userId}) {
       await supabase.rpc("increment_vote", { car_id: car.id }).catch(()=>{});
     } catch {}
     setVoted(car.id);
-    localStorage.setItem(\`unmarked_vote_\${userId}\`, car.id);
+    localStorage.setItem(`unmarked_vote_${userId}`, car.id);
     setSubmitting(false);
   };
 
