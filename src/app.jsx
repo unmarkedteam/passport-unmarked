@@ -1506,10 +1506,9 @@ export default function App() {
               setUploads(data.uploads || {});
             }
             // Restore raffle number
-        try {
-          const { data: reg } = await supabase.from("registrations").select("raffle_number").eq("phone", u.phone).single();
-          if(reg?.raffle_number) setRaffleNumber(reg.raffle_number);
-        } catch {}
+        supabase.from("registrations").select("raffle_number").eq("phone", u.phone).single()
+          .then(({ data: reg }) => { if(reg?.raffle_number) setRaffleNumber(reg.raffle_number); })
+          .catch(()=>{});
         // Also restore from localStorage backup (more reliable)
             const local = localStorage.getItem(`unmarked_progress_${uid}`);
             if(local) {
