@@ -383,8 +383,37 @@ function RegisterScreen({onRegister}) {
   const [err, setErr]   = useState("");
   const set = k => e => setForm(f=>({...f,[k]:e.target.value}));
   const submit = () => {
-    if(!form.name||!form.phone){setErr("Name and phone number are required.");return;}
-    onRegister(form);
+    if(!form.name||!form.phone||!form.email){setErr("Name, phone number and email are required.");return;}
+
+    // Phone: strip spaces, +, dashes — must be exactly 10 digits
+    const rawPhone = form.phone.replace(/[\s\+\-\(\)]/g,"");
+    if(!/^\d{10}$/.test(rawPhone)){
+      setErr("Please enter a valid 10-digit phone number (e.g. 0412 345 678).");
+      return;
+    }
+
+    // Email validation
+    if(form.email) {
+      const emailReg = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
+      if(!emailReg.test(form.email)){
+        setErr("Please enter a valid email address.");
+        return;
+      }
+      // Block obvious test/fake emails
+      const blocked = ["test.com","example.com","mailinator.com","guerrillamail.com","tempmail.com","yopmail.com","sharklasers.com","trashmail.com","fakeinbox.com","throwam.com"];
+      const domain = form.email.split("@")[1]?.toLowerCase();
+      if(blocked.includes(domain)){
+        setErr("Please use a real email address.");
+        return;
+      }
+      // Block obviously fake patterns
+      if(/^test@|^fake@|^abc@|^aaa@|^noreply@|^no@|^none@/i.test(form.email)){
+        setErr("Please use a real email address.");
+        return;
+      }
+    }
+
+    onRegister({...form, phone: rawPhone});
   };
   return (
     <div style={S.screen}>
@@ -397,7 +426,7 @@ function RegisterScreen({onRegister}) {
         {[
           {k:"name",  label:"FULL NAME *",      ph:"Jordan Lee",    t:"text"},
           {k:"phone", label:"PHONE NUMBER *",   ph:"04XX XXX XXX",  t:"tel"},
-          {k:"email", label:"EMAIL (OPTIONAL)", ph:"you@email.com", t:"email"},
+          {k:"email", label:"EMAIL ADDRESS *", ph:"you@email.com", t:"email"},
         ].map(f=>(
           <div key={f.k} style={S.field}>
             <label style={S.fieldLbl}>{f.label}</label>
