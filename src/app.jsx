@@ -1381,25 +1381,62 @@ function VoteTab({userId}) {
   const [search, setSearch]     = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR-DsvOlJwWBRQZ684qtFisvrl0OWNVSZIbXoT8Ohsb0fo2T6bBxu1QWateMo5MtrPnS6VJyuRCmT83/pub?gid=876743254&single=true&output=csv";
+
+  const parseCSV = (text) => {
+    const lines = text.trim().split("\n");
+    const headers = lines[1]?.split(",").map(h => h.replace(/"/g,"").trim()) || [];
+    return lines.slice(2).map((line, i) => {
+      // Handle commas inside quoted fields
+      const cols = [];
+      let cur = "", inQ = false;
+      for(const ch of line) {
+        if(ch==='"') inQ=!inQ;
+        else if(ch==="," && !inQ) { cols.push(cur.trim()); cur=""; }
+        else cur+=ch;
+      }
+      cols.push(cur.trim());
+      const row = {};
+      headers.forEach((h,j) => row[h] = (cols[j]||"").replace(/"/g,"").trim());
+      return row;
+    }).filter(r => r["Type"]?.toLowerCase()==="car" && r["Vehicle"] && r["Matched Applicant (Raz List)"]);
+  };
+
   useEffect(() => {
-    // Check if already voted
-    const saved = localStorage.getItem(`unmarked_vote_${userId}`);
-    if(saved) setVoted(parseInt(saved));
-    // Load cars
-    supabase.from("cars").select("id,first_name,car_model,day,votes").eq("active", true).order("first_name")
-      .then(({ data }) => { if(data) setCars(data); setLoading(false); });
+    const saved = localStorage.getItem(\`unmarked_vote_\${userId}\`);
+    if(saved) setVoted(saved);
+
+    fetch(SHEET_URL)
+      .then(r => r.text())
+      .then(text => {
+        const rows = parseCSV(text);
+        const mapped = rows.map((r, i) => ({
+          id: \`\${r["Order Name"]||i}\`,
+          first_name: r["Matched Applicant (Raz List)"].split(" ")[0].charAt(0).toUpperCase() + r["Matched Applicant (Raz List)"].split(" ")[0].slice(1).toLowerCase(),
+          car_model: r["Vehicle"],
+          day: r["Pass"] || "",
+          votes: 0,
+        })).sort((a,b) => a.first_name.localeCompare(b.first_name));
+        setCars(mapped);
+        setLoading(false);
+      })
+      .catch(() => {
+        // Fallback to Supabase if sheet unavailable
+        supabase.from("cars").select("id,first_name,car_model,day,votes").eq("active", true).order("first_name")
+          .then(({ data }) => { if(data) setCars(data.map(c=>({...c,id:String(c.id)}))); setLoading(false); });
+      });
   }, [userId]);
 
   const submitVote = async (car) => {
     if(voted || submitting) return;
     setSubmitting(true);
-    // Increment vote count in Supabase
-    await supabase.from("cars").update({ votes: (car.votes||0) + 1 }).eq("id", car.id);
+    // Save vote to Supabase for tracking
+    try {
+      await supabase.from("cars").upsert({ id: car.id, first_name: car.first_name, car_model: car.car_model, day: car.day, votes: 1 });
+      await supabase.rpc("increment_vote", { car_id: car.id }).catch(()=>{});
+    } catch {}
     setVoted(car.id);
-    localStorage.setItem(`unmarked_vote_${userId}`, String(car.id));
-    // Refresh list
-    const { data } = await supabase.from("cars").select("id,first_name,car_model,day,votes").eq("active", true).order("first_name");
-    if(data) setCars(data);
+    localStorage.setItem(\`unmarked_vote_\${userId}\`, car.id);
     setSubmitting(false);
   };
 
@@ -1448,7 +1485,7 @@ function VoteTab({userId}) {
       ) : (
         <div style={{padding:"0 16px",display:"flex",flexDirection:"column",gap:8}}>
           {filtered.map(car=>{
-            const isVoted = voted === car.id;
+            const isVoted = voted === String(car.id);
             return (
               <div key={car.id}
                 style={{
