@@ -1553,30 +1553,25 @@ export default function App() {
       }
     } catch(e) { /* no existing entry, fresh start */ }
 
-    // Save registration with raffle number
+    // Save registration — raffle number assigned automatically by DB trigger
     try {
-      // Check if already registered (existing raffle number)
       const { data: existingReg } = await supabase
         .from("registrations").select("raffle_number").eq("phone", userData.phone).maybeSingle();
 
       if(existingReg?.raffle_number) {
-        // Already has a raffle number — restore it
+        // Already registered — restore raffle number
         setRaffleNumber(existingReg.raffle_number);
         await supabase.from("registrations").upsert({
           phone: userData.phone, name: userData.name,
           email: userData.email || null, instagram: userData.instagram || null,
         }, { onConflict: "phone" });
       } else {
-        // New registration — assign next raffle number
-        const { count } = await supabase.from("registrations")
-          .select("*", { count:"exact", head:true });
-        const num = (count || 0) + 1001;
-        setRaffleNumber(num);
-        await supabase.from("registrations").upsert({
+        // New registration — insert and get auto-assigned raffle number back
+        const { data: inserted } = await supabase.from("registrations").insert({
           phone: userData.phone, name: userData.name,
           email: userData.email || null, instagram: userData.instagram || null,
-          raffle_number: num,
-        }, { onConflict: "phone" });
+        }).select("raffle_number").single();
+        if(inserted?.raffle_number) setRaffleNumber(inserted.raffle_number);
       }
     } catch(e) { console.error("Registration save failed", e); }
   }, []);
