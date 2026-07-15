@@ -1377,9 +1377,19 @@ function SettingsModal({user, onLogout, onDelete, onClose}) {
 function VoteTab({userId}) {
   const [cars, setCars]         = useState([]);
   const [loading, setLoading]   = useState(true);
-  const [voted, setVoted]       = useState(null);   // id of car voted for
+  const [voted, setVoted]       = useState(null);
   const [search, setSearch]     = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [activeDay, setActiveDay]   = useState("saturday"); // "saturday" | "both"
+  const [selectedDay, setSelectedDay] = useState("saturday");
+
+  useEffect(() => {
+    // Load which day is active from Supabase settings
+    supabase.from("settings").select("value").eq("key","active_day").single()
+      .then(({ data }) => {
+        if(data?.value) { setActiveDay(data.value); setSelectedDay(data.value === "both" ? "saturday" : data.value); }
+      }).catch(()=>{});
+  }, []);
 
   const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR-DsvOlJwWBRQZ684qtFisvrl0OWNVSZIbXoT8Ohsb0fo2T6bBxu1QWateMo5MtrPnS6VJyuRCmT83/pub?gid=876743254&single=true&output=csv";
 
@@ -1452,7 +1462,16 @@ function VoteTab({userId}) {
     setSubmitting(false);
   };
 
-  const filtered = cars.filter(c =>
+  // Filter by selected day
+  // Saturday shows: Saturday + Saturday/Weekend + Weekend entries
+  // Sunday shows: Sunday + Saturday/Weekend + Weekend entries
+  const dayFiltered = cars.filter(c => {
+    const d = (c.day||"").toLowerCase();
+    if(selectedDay === "saturday") return d.includes("saturday") || d === "weekend";
+    if(selectedDay === "sunday")   return d.includes("sunday") || d === "weekend";
+    return true;
+  });
+  const filtered = dayFiltered.filter(c =>
     `${c.first_name} ${c.car_model}`.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -1481,8 +1500,35 @@ function VoteTab({userId}) {
         )}
       </div>
 
+      {/* Day selector */}
+      <div style={{display:"flex",gap:8,padding:"16px 16px 8px"}}>
+        {["saturday","sunday"].map(day=>{
+          const isSelected = selectedDay === day;
+          const isLocked = day === "sunday" && activeDay === "saturday";
+          return (
+            <button key={day}
+              disabled={isLocked}
+              onClick={()=>!isLocked && setSelectedDay(day)}
+              style={{
+                flex:1, padding:"12px", borderRadius:12, border:"none",
+                fontFamily:JOST, fontWeight:800, fontSize:13, letterSpacing:"0.05em",
+                textTransform:"uppercase", cursor: isLocked ? "not-allowed" : "pointer",
+                background: isSelected ? "#1C1C1E" : CARD,
+                color: isLocked ? TEXT3 : isSelected ? "#FFF" : TEXT2,
+                boxShadow: isSelected ? "0 4px 16px rgba(0,0,0,0.15)" : SHADOW,
+                opacity: isLocked ? 0.4 : 1,
+                position:"relative",
+              }}
+            >
+              {day === "saturday" ? "Saturday 25 Jul" : "Sunday 26 Jul"}
+              {isLocked && <span style={{display:"block",fontSize:9,fontWeight:400,marginTop:2,letterSpacing:"0.1em",color:TEXT3}}>COMING SOON</span>}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Search */}
-      <div style={{padding:"16px 16px 8px"}}>
+      <div style={{padding:"0 16px 8px"}}>
         <input
           style={{width:"100%",background:CARD,border:`1.5px solid ${EDGE}`,color:TEXT1,padding:"12px 16px",fontSize:14,fontFamily:JOST,outline:"none",boxSizing:"border-box",borderRadius:12}}
           placeholder="Search by name or car..."

@@ -48,6 +48,42 @@ async function downloadAllPhotos(uploads) {
   }
 }
 
+function DayToggle() {
+  const [activeDay, setActiveDay] = useState("saturday");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    supabase.from("settings").select("value").eq("key","active_day").single()
+      .then(({ data }) => { if(data?.value) setActiveDay(data.value); });
+  }, []);
+
+  const toggle = async (day) => {
+    setSaving(true);
+    await supabase.from("settings").upsert({ key:"active_day", value: day });
+    setActiveDay(day);
+    setSaving(false);
+  };
+
+  return (
+    <div style={{margin:"20px 24px 0",background:CARD,border:`1px solid ${EDGE}`,borderRadius:12,padding:"20px"}}>
+      <div style={{fontSize:10,color:DIM,letterSpacing:"0.35em",fontFamily:MONO,marginBottom:12}}>VOTE DAY CONTROL</div>
+      <div style={{fontSize:13,color:WHITE,fontFamily:"'Arial Black',sans-serif",marginBottom:16}}>
+        Currently active: <span style={{color:ACCENT}}>{activeDay === "both" ? "SATURDAY + SUNDAY" : activeDay.toUpperCase()}</span>
+      </div>
+      <div style={{display:"flex",gap:8}}>
+        <button
+          onClick={()=>toggle("saturday")}
+          style={{flex:1,padding:"12px",background:activeDay==="saturday"?ACCENT:CARD,color:activeDay==="saturday"?"#000":WHITE,border:`1px solid ${EDGE}`,borderRadius:8,fontFamily:"'Arial Black',sans-serif",fontSize:12,cursor:"pointer",fontWeight:900}}
+        >SATURDAY ONLY</button>
+        <button
+          onClick={()=>toggle("both")}
+          style={{flex:1,padding:"12px",background:activeDay==="both"?ACCENT:CARD,color:activeDay==="both"?"#000":WHITE,border:`1px solid ${EDGE}`,borderRadius:8,fontFamily:"'Arial Black',sans-serif",fontSize:12,cursor:"pointer",fontWeight:900}}
+        >{saving?"SAVING...":"ACTIVATE SUNDAY"}</button>
+      </div>
+    </div>
+  );
+}
+
 function RaffleDraw({registrations}) {
   const [winner, setWinner] = useState(null);
   const [drawing, setDrawing] = useState(false);
@@ -249,6 +285,8 @@ export default function Admin() {
         </div>
       )}
 
+      {/* Day toggle */}
+      <DayToggle/>
       {/* Raffle draw section */}
       <RaffleDraw registrations={registrations}/>
 
