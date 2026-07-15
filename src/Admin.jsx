@@ -48,6 +48,73 @@ async function downloadAllPhotos(uploads) {
   }
 }
 
+function RaffleDraw({registrations}) {
+  const [winner, setWinner] = useState(null);
+  const [drawing, setDrawing] = useState(false);
+  const [history, setHistory] = useState([]);
+
+  const draw = () => {
+    const eligible = registrations.filter(r => r.raffle_number);
+    if(!eligible.length) return;
+    setDrawing(true);
+    // Animate through numbers
+    let count = 0;
+    const interval = setInterval(() => {
+      const random = eligible[Math.floor(Math.random() * eligible.length)];
+      setWinner(random);
+      count++;
+      if(count > 20) {
+        clearInterval(interval);
+        const final = eligible[Math.floor(Math.random() * eligible.length)];
+        setWinner(final);
+        setHistory(h => [{...final, drawnAt: new Date().toLocaleTimeString()}, ...h]);
+        setDrawing(false);
+      }
+    }, 80);
+  };
+
+  return (
+    <div style={{margin:"20px 24px",background:CARD,border:`1px solid ${EDGE}`,borderRadius:12,overflow:"hidden"}}>
+      <div style={{background:"#1C1C1E",padding:"20px 20px 16px"}}>
+        <div style={{fontSize:10,color:ACCENT,letterSpacing:"0.35em",fontFamily:MONO,marginBottom:8}}>RAFFLE DRAW</div>
+        {winner ? (
+          <div style={{textAlign:"center",padding:"8px 0"}}>
+            <div style={{fontSize:48,fontWeight:900,color:ACCENT,fontFamily:"'Arial Black',sans-serif",letterSpacing:"0.05em"}}>
+              #{String(winner.raffle_number).padStart(4,"0")}
+            </div>
+            <div style={{fontSize:20,fontWeight:700,color:"#FFF",fontFamily:"'Arial Black',sans-serif",marginTop:4}}>{winner.name}</div>
+            <div style={{fontSize:13,color:"rgba(255,255,255,0.4)",fontFamily:MONO,marginTop:2}}>{winner.phone}</div>
+          </div>
+        ) : (
+          <div style={{textAlign:"center",padding:"16px 0",color:"rgba(255,255,255,0.3)",fontFamily:MONO,fontSize:13}}>
+            Press DRAW to pick a winner
+          </div>
+        )}
+        <button
+          onClick={draw}
+          disabled={drawing}
+          style={{width:"100%",marginTop:16,background:drawing?"#333":ACCENT,color:drawing?"#888":"#000",border:"none",padding:"16px",fontSize:14,fontWeight:900,letterSpacing:"0.1em",cursor:drawing?"not-allowed":"pointer",fontFamily:"'Arial Black',sans-serif",borderRadius:8}}
+        >
+          {drawing ? "DRAWING..." : winner ? "DRAW AGAIN" : "DRAW WINNER"}
+        </button>
+      </div>
+      {/* Draw history */}
+      {history.length > 0 && (
+        <div style={{padding:"12px 16px"}}>
+          <div style={{fontSize:10,color:DIM,letterSpacing:"0.25em",fontFamily:MONO,marginBottom:8}}>DRAW HISTORY</div>
+          {history.map((h,i)=>(
+            <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderBottom:`1px solid ${EDGE}`}}>
+              <span style={{fontWeight:700,color:ACCENT,fontFamily:MONO}}>#{String(h.raffle_number).padStart(4,"0")}</span>
+              <span style={{color:WHITE,fontSize:13}}>{h.name}</span>
+              <span style={{color:DIM,fontSize:11,fontFamily:MONO}}>{h.drawnAt}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Admin() {
   const [authed, setAuthed]           = useState(false);
   const [pw, setPw]                   = useState("");
@@ -181,6 +248,9 @@ export default function Admin() {
           />
         </div>
       )}
+
+      {/* Raffle draw section */}
+      <RaffleDraw registrations={registrations}/>
 
       {/* Registrations tab */}
       {tab==="registrations" && (

@@ -183,6 +183,7 @@ function BottomNav({tab, setTab}) {
         {id:"leaderboard", label:"LEADERBOARD", icon:"🏆"},
         {id:"explore",     label:"EXPLORE",     icon:"🔍"},
         {id:"hotwheels",   label:"HOT WHEELS",  icon:"🔥"},
+        {id:"vote",         label:"VOTE",        icon:"🗳️"},
       ].map(t=>(
         <button key={t.id} style={{...S.navBtn,...(tab===t.id?S.navBtnActive:{})}} onClick={()=>setTab(t.id)}>
           <span style={S.navIcon}>{t.icon}</span>
@@ -412,7 +413,7 @@ function RegisterScreen({onRegister}) {
 }
 
 // ─── PASSPORT TAB ─────────────────────────────────────────────────────────────
-function PassportTab({user, points, vendorStamps, soloCompleted, votes, uploads, onCat, onSolo, onSaveUpload, onSubmitDraw, drawSubmitted, onClaimPrizes, onSettings}) {
+function PassportTab({user, points, raffleNumber, vendorStamps, soloCompleted, votes, uploads, onCat, onSolo, onSaveUpload, onSubmitDraw, drawSubmitted, onClaimPrizes, onSettings}) {
   const done      = totalDone(vendorStamps, soloCompleted);
   const eligible  = done >= REQUIRED;
   const progress  = Math.min(done/REQUIRED, 1);
@@ -430,6 +431,15 @@ function PassportTab({user, points, vendorStamps, soloCompleted, votes, uploads,
             <Eyebrow>PASSPORT HOLDER</Eyebrow>
             <div style={S.holderName}>{user.name.toUpperCase()}</div>
             {user.instagram && <div style={S.holderIg}>{user.instagram}</div>}
+            {/* Raffle ticket number */}
+            {raffleNumber && (
+              <div style={{marginTop:8,display:"inline-flex",alignItems:"center",gap:8,background:"rgba(255,229,0,0.1)",border:"1px solid rgba(255,229,0,0.25)",borderRadius:8,padding:"5px 10px"}}>
+                <span style={{fontSize:10,color:"rgba(255,255,255,0.5)",fontFamily:MONO,letterSpacing:"0.2em"}}>RAFFLE #</span>
+                <span style={{fontSize:18,fontWeight:900,color:ACCENT,fontFamily:JOST,letterSpacing:"0.05em"}}>
+                  {String(raffleNumber).padStart(4,"0")}
+                </span>
+              </div>
+            )}
           </div>
           <div style={S.ptsBadge}>
             <div style={S.ptsNum}>{points}</div>
@@ -1333,6 +1343,123 @@ function SettingsModal({user, onLogout, onDelete, onClose}) {
   );
 }
 
+
+// ─── VOTE TAB ────────────────────────────────────────────────────────────────
+function VoteTab({userId}) {
+  const [cars, setCars]         = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [voted, setVoted]       = useState(null);   // id of car voted for
+  const [search, setSearch]     = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    // Check if already voted
+    const saved = localStorage.getItem(`unmarked_vote_${userId}`);
+    if(saved) setVoted(parseInt(saved));
+    // Load cars
+    supabase.from("cars").select("id,first_name,car_model,day,votes").eq("active", true).order("first_name")
+      .then(({ data }) => { if(data) setCars(data); setLoading(false); });
+  }, [userId]);
+
+  const submitVote = async (car) => {
+    if(voted || submitting) return;
+    setSubmitting(true);
+    // Increment vote count in Supabase
+    await supabase.from("cars").update({ votes: (car.votes||0) + 1 }).eq("id", car.id);
+    setVoted(car.id);
+    localStorage.setItem(`unmarked_vote_${userId}`, String(car.id));
+    // Refresh list
+    const { data } = await supabase.from("cars").select("id,first_name,car_model,day,votes").eq("active", true).order("first_name");
+    if(data) setCars(data);
+    setSubmitting(false);
+  };
+
+  const filtered = cars.filter(c =>
+    `${c.first_name} ${c.car_model}`.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const votedCar = cars.find(c => c.id === voted);
+
+  return (
+    <div style={{...S.screen, paddingBottom:120}}>
+      <TopBar title="VOTE"/>
+
+      {/* Hero */}
+      <div style={{background:"#1C1C1E", padding:"28px 20px 24px"}}>
+        <div style={{fontSize:9,color:ACCENT,letterSpacing:"0.35em",fontFamily:MONO,marginBottom:8,textTransform:"uppercase"}}>PEOPLE'S CHOICE</div>
+        <div style={{fontSize:"clamp(28px,8vw,38px)",fontWeight:900,color:"#FFF",fontFamily:JOST,letterSpacing:"-0.04em",lineHeight:1,fontStyle:"italic",marginBottom:8}}>
+          VOTE FOR YOUR<br/>FAVOURITE CAR
+        </div>
+        <div style={{fontSize:13,color:"rgba(255,255,255,0.45)",fontFamily:JOST,lineHeight:1.5}}>
+          {voted
+            ? `You voted for ${votedCar?.first_name}'s ${votedCar?.car_model}. Thanks for voting!`
+            : "One vote per passport. Choose your favourite build from the show floor."}
+        </div>
+        {voted && (
+          <div style={{marginTop:14,background:"rgba(255,229,0,0.1)",border:"1px solid rgba(255,229,0,0.3)",borderRadius:10,padding:"10px 14px",display:"flex",alignItems:"center",gap:8}}>
+            <span style={{fontSize:16}}>🏆</span>
+            <span style={{fontSize:13,fontWeight:700,color:ACCENT,fontFamily:JOST}}>{votedCar?.first_name}'s {votedCar?.car_model}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Search */}
+      <div style={{padding:"16px 16px 8px"}}>
+        <input
+          style={{width:"100%",background:CARD,border:`1.5px solid ${EDGE}`,color:TEXT1,padding:"12px 16px",fontSize:14,fontFamily:JOST,outline:"none",boxSizing:"border-box",borderRadius:12}}
+          placeholder="Search by name or car..."
+          value={search}
+          onChange={e=>setSearch(e.target.value)}
+        />
+      </div>
+
+      {/* Cars list */}
+      {loading ? (
+        <div style={{padding:"40px",textAlign:"center",color:TEXT3,fontFamily:JOST}}>Loading cars...</div>
+      ) : (
+        <div style={{padding:"0 16px",display:"flex",flexDirection:"column",gap:8}}>
+          {filtered.map(car=>{
+            const isVoted = voted === car.id;
+            return (
+              <div key={car.id}
+                style={{
+                  background: isVoted ? "#1C1C1E" : CARD,
+                  border: isVoted ? `2px solid ${ACCENT}` : `1.5px solid ${EDGE}`,
+                  borderRadius:14, padding:"16px",
+                  boxShadow: isVoted ? `0 4px 20px rgba(255,229,0,0.15)` : SHADOW,
+                  display:"flex", alignItems:"center", gap:12,
+                  opacity: voted && !isVoted ? 0.5 : 1,
+                  cursor: voted ? "default" : "pointer",
+                  transition:"all 0.2s",
+                }}
+                onClick={()=>!voted && submitVote(car)}
+              >
+                <div style={{fontSize:22,flexShrink:0}}>🚗</div>
+                <div style={{flex:1,minWidth:0}}>
+                  <div style={{fontSize:15,fontWeight:800,color:isVoted?"#FFF":TEXT1,fontFamily:JOST,letterSpacing:"-0.01em",marginBottom:2}}>
+                    {car.first_name}'s {car.car_model}
+                  </div>
+                  <div style={{fontSize:11,color:isVoted?"rgba(255,255,255,0.4)":TEXT3,fontFamily:JOST}}>{car.day}</div>
+                </div>
+                {isVoted ? (
+                  <div style={{background:ACCENT,color:"#000",borderRadius:20,padding:"4px 12px",fontSize:11,fontWeight:800,fontFamily:JOST,flexShrink:0}}>
+                    ✓ VOTED
+                  </div>
+                ) : !voted ? (
+                  <div style={{color:TEXT3,fontSize:20,flexShrink:0}}>›</div>
+                ) : null}
+              </div>
+            );
+          })}
+          {filtered.length === 0 && (
+            <div style={{padding:"32px",textAlign:"center",color:TEXT3,fontFamily:JOST,fontSize:14}}>No cars found</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [screen,setScreen]             = useState("splash");  // splash | signin | register | main | ...
@@ -1345,7 +1472,8 @@ export default function App() {
   const [votes,setVotes]               = useState({});
   const [uploads,setUploads]           = useState({});   // { taskId: dataURL }
   const [hwClaimed,setHwClaimed]       = useState(false); // Hot Wheels challenge claimed
-  const [claimedPrizes,setClaimedPrizes] = useState([]); // prize pts already redeemed e.g. [9, 18]
+  const [claimedPrizes,setClaimedPrizes] = useState([]);
+  const [raffleNumber,setRaffleNumber]   = useState(null);
   const [bonusPoints,setBonus]         = useState(0);   // points added back after redemption bonus
   const [redeemedPts,setRedeemed]      = useState(0);   // total points spent on prizes
   const [activePin,setActivePin]       = useState(null);
@@ -1377,7 +1505,12 @@ export default function App() {
               setRedeemed(data.redeemed_points || 0);
               setUploads(data.uploads || {});
             }
-            // Also restore from localStorage backup (more reliable)
+            // Restore raffle number
+        try {
+          const { data: reg } = await supabase.from("registrations").select("raffle_number").eq("phone", u.phone).single();
+          if(reg?.raffle_number) setRaffleNumber(reg.raffle_number);
+        } catch {}
+        // Also restore from localStorage backup (more reliable)
             const local = localStorage.getItem(`unmarked_progress_${uid}`);
             if(local) {
               try {
@@ -1510,6 +1643,11 @@ export default function App() {
         setUploads(data.uploads || {});
       }
     } catch {}
+    // Restore raffle number
+    try {
+      const { data: reg } = await supabase.from("registrations").select("raffle_number").eq("phone", u.phone).single();
+      if(reg?.raffle_number) setRaffleNumber(reg.raffle_number);
+    } catch {}
     setScreen("main");
   };
 
@@ -1634,10 +1772,11 @@ export default function App() {
 
   if(screen==="main") return (
     <div style={{position:"relative",minHeight:"100vh",background:BG}}>
-      {tab==="passport"   && <PassportTab user={user} points={points} vendorStamps={vendorStamps} soloCompleted={soloCompleted} votes={votes} uploads={uploads} onCat={openCat} onSolo={openSoloPin} onSaveUpload={saveUpload} onSubmitDraw={()=>{setDrawDone(true);setScreen("draw");}} drawSubmitted={drawDone} onClaimPrizes={()=>setScreen("claimPrizes")} onSettings={()=>setShowSettings(true)}/>}
+      {tab==="passport"   && <PassportTab user={user} points={points} raffleNumber={raffleNumber} vendorStamps={vendorStamps} soloCompleted={soloCompleted} votes={votes} uploads={uploads} onCat={openCat} onSolo={openSoloPin} onSaveUpload={saveUpload} onSubmitDraw={()=>{setDrawDone(true);setScreen("draw");}} drawSubmitted={drawDone} onClaimPrizes={()=>setScreen("claimPrizes")} onSettings={()=>setShowSettings(true)}/>}
       {tab==="leaderboard" && <LeaderboardTab currentUser={{...user,id:userId}} currentPoints={points} leaderboard={leaderboard}/>}
       {tab==="explore"     && <ExploreTab/>}
       {tab==="hotwheels"   && <HotWheelsTab claimed={hwClaimed} onClaim={()=>setScreen("hwpin")}/>}
+      {tab==="vote"        && <VoteTab userId={userId}/>}
       <BottomNav tab={tab} setTab={setTab}/>
       {showSettings && <SettingsModal user={user} onLogout={handleLogout} onDelete={handleDeleteAccount} onClose={()=>setShowSettings(false)}/>}
     </div>
