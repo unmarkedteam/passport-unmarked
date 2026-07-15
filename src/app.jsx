@@ -1495,7 +1495,7 @@ function VoteTab({userId}) {
         {voted && (
           <div style={{marginTop:14,background:"rgba(255,229,0,0.1)",border:"1px solid rgba(255,229,0,0.3)",borderRadius:10,padding:"10px 14px",display:"flex",alignItems:"center",gap:8}}>
             <span style={{fontSize:16}}>🏆</span>
-            <span style={{fontSize:13,fontWeight:700,color:ACCENT,fontFamily:JOST}}>{votedCar?.first_name}'s {votedCar?.car_model}</span>
+            <span style={{fontSize:13,fontWeight:700,color:ACCENT,fontFamily:JOST}}>{votedCar?.first_name.toUpperCase()}'S {votedCar?.car_model.toUpperCase()}</span>
           </div>
         )}
       </div>
@@ -1560,10 +1560,9 @@ function VoteTab({userId}) {
               >
                 <div style={{fontSize:22,flexShrink:0}}>🚗</div>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:15,fontWeight:800,color:isVoted?"#FFF":TEXT1,fontFamily:JOST,letterSpacing:"-0.01em",marginBottom:2}}>
-                    {car.first_name}'s {car.car_model}
+                  <div style={{fontSize:15,fontWeight:800,color:isVoted?"#FFF":TEXT1,fontFamily:JOST,letterSpacing:"-0.01em"}}>
+                    {car.first_name.toUpperCase()}'S {car.car_model.toUpperCase()}
                   </div>
-                  <div style={{fontSize:11,color:isVoted?"rgba(255,255,255,0.4)":TEXT3,fontFamily:JOST}}>{car.day}</div>
                 </div>
                 {isVoted ? (
                   <div style={{background:ACCENT,color:"#000",borderRadius:20,padding:"4px 12px",fontSize:11,fontWeight:800,fontFamily:JOST,flexShrink:0}}>
