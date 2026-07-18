@@ -1646,20 +1646,34 @@ function FlipCard({vendor}) {
         <div style={{
           position:"absolute", inset:0, backfaceVisibility:"hidden",
           WebkitBackfaceVisibility:"hidden",
-          background:CARD, borderRadius:16, padding:"18px 16px",
+          background:CARD, borderRadius:16,
           boxShadow:SHADOW, display:"flex", flexDirection:"column",
           justifyContent:"space-between", overflow:"hidden",
         }}>
           {/* Colour accent bar */}
-          <div style={{position:"absolute",top:0,left:0,right:0,height:4,background:vendor.color,borderRadius:"16px 16px 0 0"}}/>
-          <div>
-            <div style={{fontSize:32,marginBottom:8,marginTop:4}}>{vendor.icon}</div>
-            <div style={{fontSize:14,fontWeight:800,color:TEXT1,fontFamily:JOST,letterSpacing:"-0.01em",lineHeight:1.2,marginBottom:6}}>{vendor.name}</div>
-            <div style={{fontSize:11,color:TEXT2,fontFamily:JOST,lineHeight:1.5,display:"-webkit-box",WebkitLineClamp:3,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{vendor.desc}</div>
+          <div style={{position:"absolute",top:0,left:0,right:0,height:4,background:vendor.color,borderRadius:"16px 16px 0 0",zIndex:1}}/>
+
+          {/* Instagram profile photo — top half */}
+          <div style={{position:"relative",height:100,overflow:"hidden",background:BG,flexShrink:0}}>
+            <img
+              src={`https://unavatar.io/instagram/${vendor.ig}`}
+              alt={vendor.name}
+              style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}
+              onError={e=>{e.target.style.display="none"; e.target.nextSibling.style.display="flex";}}
+            />
+            {/* Fallback emoji */}
+            <div style={{display:"none",position:"absolute",inset:0,alignItems:"center",justifyContent:"center",fontSize:36,background:BG}}>
+              {vendor.icon}
+            </div>
           </div>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-            <div style={{fontSize:10,color:vendor.color,fontFamily:MONO,letterSpacing:"0.15em",fontWeight:700,textTransform:"uppercase"}}>{vendor.cat}</div>
-            <div style={{fontSize:10,color:TEXT3,fontFamily:JOST}}>tap to flip →</div>
+
+          {/* Bottom info */}
+          <div style={{padding:"10px 14px 12px",flex:1,display:"flex",flexDirection:"column",justifyContent:"space-between"}}>
+            <div style={{fontSize:13,fontWeight:800,color:TEXT1,fontFamily:JOST,letterSpacing:"-0.01em",lineHeight:1.2,marginBottom:4}}>{vendor.name}</div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div style={{fontSize:9,color:vendor.color,fontFamily:MONO,letterSpacing:"0.15em",fontWeight:700,textTransform:"uppercase"}}>{vendor.cat}</div>
+              <div style={{fontSize:9,color:TEXT3,fontFamily:JOST}}>tap to flip →</div>
+            </div>
           </div>
         </div>
 
