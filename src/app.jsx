@@ -184,7 +184,6 @@ function BottomNav({tab, setTab}) {
         {id:"explore",     label:"EXPLORE",     icon:"🔍"},
         {id:"hotwheels",   label:"HOT WHEELS",  icon:"🔥"},
         {id:"vote",         label:"VOTE",        icon:"🗳️"},
-        {id:"vendors",      label:"VENDORS",     icon:"🏪"},
       ].map(t=>(
         <button key={t.id} style={{...S.navBtn,...(tab===t.id?S.navBtnActive:{})}} onClick={()=>setTab(t.id)}>
           <span style={S.navIcon}>{t.icon}</span>
@@ -384,37 +383,8 @@ function RegisterScreen({onRegister}) {
   const [err, setErr]   = useState("");
   const set = k => e => setForm(f=>({...f,[k]:e.target.value}));
   const submit = () => {
-    if(!form.name||!form.phone||!form.email){setErr("Name, phone number and email are required.");return;}
-
-    // Phone: strip spaces, +, dashes — must be exactly 10 digits
-    const rawPhone = form.phone.replace(/[\s\+\-\(\)]/g,"");
-    if(!/^\d{10}$/.test(rawPhone)){
-      setErr("Please enter a valid 10-digit phone number (e.g. 0412 345 678).");
-      return;
-    }
-
-    // Email validation
-    if(form.email) {
-      const emailReg = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
-      if(!emailReg.test(form.email)){
-        setErr("Please enter a valid email address.");
-        return;
-      }
-      // Block obvious test/fake emails
-      const blocked = ["test.com","example.com","mailinator.com","guerrillamail.com","tempmail.com","yopmail.com","sharklasers.com","trashmail.com","fakeinbox.com","throwam.com"];
-      const domain = form.email.split("@")[1]?.toLowerCase();
-      if(blocked.includes(domain)){
-        setErr("Please use a real email address.");
-        return;
-      }
-      // Block obviously fake patterns
-      if(/^test@|^fake@|^abc@|^aaa@|^noreply@|^no@|^none@/i.test(form.email)){
-        setErr("Please use a real email address.");
-        return;
-      }
-    }
-
-    onRegister({...form, phone: rawPhone});
+    if(!form.name||!form.phone){setErr("Name and phone number are required.");return;}
+    onRegister(form);
   };
   return (
     <div style={S.screen}>
@@ -427,7 +397,7 @@ function RegisterScreen({onRegister}) {
         {[
           {k:"name",  label:"FULL NAME *",      ph:"Jordan Lee",    t:"text"},
           {k:"phone", label:"PHONE NUMBER *",   ph:"04XX XXX XXX",  t:"tel"},
-          {k:"email", label:"EMAIL ADDRESS *", ph:"you@email.com", t:"email"},
+          {k:"email", label:"EMAIL (OPTIONAL)", ph:"you@email.com", t:"email"},
         ].map(f=>(
           <div key={f.k} style={S.field}>
             <label style={S.fieldLbl}>{f.label}</label>
@@ -1378,78 +1348,33 @@ function SettingsModal({user, onLogout, onDelete, onClose}) {
 function VoteTab({userId}) {
   const [cars, setCars]         = useState([]);
   const [loading, setLoading]   = useState(true);
-  const [voted, setVoted]       = useState(null);
+  const [voted, setVoted]       = useState(null);   // id of car voted for
   const [search, setSearch]     = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [activeDay, setActiveDay]   = useState("saturday");
-  const [selectedDay, setSelectedDay] = useState("saturday");
-  const [pendingVote, setPendingVote] = useState(null); // car waiting for confirmation
 
   useEffect(() => {
-    // Load which day is active from Supabase settings
-    supabase.from("settings").select("value").eq("key","active_day").single()
-      .then(({ data }) => {
-        if(data?.value) { setActiveDay(data.value); setSelectedDay(data.value === "both" ? "saturday" : data.value); }
-      }).catch(()=>{});
-  }, []);
-
-  const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR-DsvOlJwWBRQZ684qtFisvrl0OWNVSZIbXoT8Ohsb0fo2T6bBxu1QWateMo5MtrPnS6VJyuRCmT83/pub?gid=876743254&single=true&output=csv";
-
-  const parseCSV = (text) => {
-    const lines = text.trim().split("\n");
-    const headers = lines[1]?.split(",").map(h => h.replace(/"/g,"").trim()) || [];
-    return lines.slice(2).map((line, i) => {
-      // Handle commas inside quoted fields
-      const cols = [];
-      let cur = "", inQ = false;
-      for(const ch of line) {
-        if(ch==='"') inQ=!inQ;
-        else if(ch==="," && !inQ) { cols.push(cur.trim()); cur=""; }
-        else cur+=ch;
-      }
-      cols.push(cur.trim());
-      const row = {};
-      headers.forEach((h,j) => row[h] = (cols[j]||"").replace(/"/g,"").trim());
-      return row;
-    }).filter(r => r["Type"]?.toLowerCase()==="car" && r["Vehicle"] && r["Matched Applicant (Raz List)"]);
-  };
-
-  useEffect(() => {
+    // Check if already voted
     const saved = localStorage.getItem(`unmarked_vote_${userId}`);
-    if(saved) setVoted(saved);
-
-    supabase.from("cars").select("id,first_name,car_model,day,instagram,votes")
-      .eq("active", true).order("first_name")
-      .then(({ data }) => {
-        if(data && data.length > 0) setCars(data.map(c=>({...c,id:String(c.id)})));
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    if(saved) setVoted(parseInt(saved));
+    // Load cars
+    supabase.from("cars").select("id,first_name,car_model,day,votes").eq("active", true).order("first_name")
+      .then(({ data }) => { if(data) setCars(data); setLoading(false); });
   }, [userId]);
 
   const submitVote = async (car) => {
     if(voted || submitting) return;
     setSubmitting(true);
-    // Save vote to Supabase for tracking
-    try {
-      await supabase.from("cars").upsert({ id: car.id, first_name: car.first_name, car_model: car.car_model, day: car.day, votes: 1 });
-      await supabase.rpc("increment_vote", { car_id: car.id }).catch(()=>{});
-    } catch {}
+    // Increment vote count in Supabase
+    await supabase.from("cars").update({ votes: (car.votes||0) + 1 }).eq("id", car.id);
     setVoted(car.id);
-    localStorage.setItem(`unmarked_vote_${userId}`, car.id);
+    localStorage.setItem(`unmarked_vote_${userId}`, String(car.id));
+    // Refresh list
+    const { data } = await supabase.from("cars").select("id,first_name,car_model,day,votes").eq("active", true).order("first_name");
+    if(data) setCars(data);
     setSubmitting(false);
   };
 
-  // Filter by selected day
-  // Saturday shows: Saturday + Saturday/Weekend + Weekend entries
-  // Sunday shows: Sunday + Saturday/Weekend + Weekend entries
-  const dayFiltered = cars.filter(c => {
-    const d = (c.day||"").toLowerCase();
-    if(selectedDay === "saturday") return d.includes("saturday") || d === "weekend";
-    if(selectedDay === "sunday")   return d.includes("sunday") || d === "weekend";
-    return true;
-  });
-  const filtered = dayFiltered.filter(c =>
+  const filtered = cars.filter(c =>
     `${c.first_name} ${c.car_model}`.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -1473,40 +1398,13 @@ function VoteTab({userId}) {
         {voted && (
           <div style={{marginTop:14,background:"rgba(255,229,0,0.1)",border:"1px solid rgba(255,229,0,0.3)",borderRadius:10,padding:"10px 14px",display:"flex",alignItems:"center",gap:8}}>
             <span style={{fontSize:16}}>🏆</span>
-            <span style={{fontSize:13,fontWeight:700,color:ACCENT,fontFamily:JOST}}>{votedCar?.first_name.toUpperCase()}'S {votedCar?.car_model.toUpperCase()}</span>
+            <span style={{fontSize:13,fontWeight:700,color:ACCENT,fontFamily:JOST}}>{votedCar?.first_name}'s {votedCar?.car_model}</span>
           </div>
         )}
       </div>
 
-      {/* Day selector */}
-      <div style={{display:"flex",gap:8,padding:"16px 16px 8px"}}>
-        {["saturday","sunday"].map(day=>{
-          const isSelected = selectedDay === day;
-          const isLocked = day === "sunday" && activeDay === "saturday";
-          return (
-            <button key={day}
-              disabled={isLocked}
-              onClick={()=>!isLocked && setSelectedDay(day)}
-              style={{
-                flex:1, padding:"12px", borderRadius:12, border:"none",
-                fontFamily:JOST, fontWeight:800, fontSize:13, letterSpacing:"0.05em",
-                textTransform:"uppercase", cursor: isLocked ? "not-allowed" : "pointer",
-                background: isSelected ? "#1C1C1E" : CARD,
-                color: isLocked ? TEXT3 : isSelected ? "#FFF" : TEXT2,
-                boxShadow: isSelected ? "0 4px 16px rgba(0,0,0,0.15)" : SHADOW,
-                opacity: isLocked ? 0.4 : 1,
-                position:"relative",
-              }}
-            >
-              {day === "saturday" ? "Saturday 25 Jul" : "Sunday 26 Jul"}
-              {isLocked && <span style={{display:"block",fontSize:9,fontWeight:400,marginTop:2,letterSpacing:"0.1em",color:TEXT3}}>COMING SOON</span>}
-            </button>
-          );
-        })}
-      </div>
-
       {/* Search */}
-      <div style={{padding:"0 16px 8px"}}>
+      <div style={{padding:"16px 16px 8px"}}>
         <input
           style={{width:"100%",background:CARD,border:`1.5px solid ${EDGE}`,color:TEXT1,padding:"12px 16px",fontSize:14,fontFamily:JOST,outline:"none",boxSizing:"border-box",borderRadius:12}}
           placeholder="Search by name or car..."
@@ -1521,7 +1419,7 @@ function VoteTab({userId}) {
       ) : (
         <div style={{padding:"0 16px",display:"flex",flexDirection:"column",gap:8}}>
           {filtered.map(car=>{
-            const isVoted = voted === String(car.id);
+            const isVoted = voted === car.id;
             return (
               <div key={car.id}
                 style={{
@@ -1534,18 +1432,14 @@ function VoteTab({userId}) {
                   cursor: voted ? "default" : "pointer",
                   transition:"all 0.2s",
                 }}
-                onClick={()=>!voted && !submitting && setPendingVote(car)}
+                onClick={()=>!voted && submitVote(car)}
               >
                 <div style={{fontSize:22,flexShrink:0}}>🚗</div>
                 <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:15,fontWeight:800,color:isVoted?"#FFF":TEXT1,fontFamily:JOST,letterSpacing:"-0.01em",marginBottom:car.instagram?3:0}}>
-                    {car.first_name.toUpperCase()}'S {car.car_model.toUpperCase()}
+                  <div style={{fontSize:15,fontWeight:800,color:isVoted?"#FFF":TEXT1,fontFamily:JOST,letterSpacing:"-0.01em",marginBottom:2}}>
+                    {car.first_name}'s {car.car_model}
                   </div>
-                  {car.instagram && (
-                    <div style={{fontSize:11,color:isVoted?"rgba(255,255,255,0.4)":TEXT3,fontFamily:MONO,letterSpacing:"0.05em"}}>
-                      @{car.instagram}
-                    </div>
-                  )}
+                  <div style={{fontSize:11,color:isVoted?"rgba(255,255,255,0.4)":TEXT3,fontFamily:JOST}}>{car.day}</div>
                 </div>
                 {isVoted ? (
                   <div style={{background:ACCENT,color:"#000",borderRadius:20,padding:"4px 12px",fontSize:11,fontWeight:800,fontFamily:JOST,flexShrink:0}}>
@@ -1562,212 +1456,6 @@ function VoteTab({userId}) {
           )}
         </div>
       )}
-
-      {/* Confirm vote modal */}
-      {pendingVote && (
-        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:200,display:"flex",alignItems:"flex-end",justifyContent:"center"}}
-          onClick={()=>setPendingVote(null)}>
-          <div style={{background:CARD,borderRadius:"20px 20px 0 0",padding:"28px 24px 48px",width:"100%",maxWidth:500,boxShadow:"0 -8px 40px rgba(0,0,0,0.2)"}}
-            onClick={e=>e.stopPropagation()}>
-            <div style={{width:36,height:4,background:EDGE,borderRadius:2,margin:"0 auto 24px"}}/>
-            <div style={{fontSize:11,color:TEXT3,letterSpacing:"0.2em",fontFamily:MONO,marginBottom:8,textTransform:"uppercase"}}>Confirm Your Vote</div>
-            <div style={{fontSize:20,fontWeight:900,color:TEXT1,fontFamily:JOST,letterSpacing:"-0.02em",marginBottom:4,fontStyle:"italic"}}>
-              {pendingVote.first_name.toUpperCase()}'S {pendingVote.car_model.toUpperCase()}
-            </div>
-            {pendingVote.instagram && (
-              <div style={{fontSize:12,color:TEXT3,fontFamily:MONO,marginBottom:20}}>@{pendingVote.instagram}</div>
-            )}
-            <div style={{fontSize:13,color:TEXT2,fontFamily:JOST,marginBottom:24,lineHeight:1.5}}>
-              This is your one vote. You can't change it after confirming.
-            </div>
-            <button
-              style={{width:"100%",background:"#1C1C1E",color:"#FFF",border:"none",padding:"17px",fontSize:14,fontWeight:800,letterSpacing:"0.08em",cursor:"pointer",fontFamily:JOST,borderRadius:14,marginBottom:10,textTransform:"uppercase"}}
-              onClick={()=>{ submitVote(pendingVote); setPendingVote(null); }}
-            >✓ CONFIRM VOTE</button>
-            <button
-              style={{width:"100%",background:"none",border:`1.5px solid ${EDGE}`,color:TEXT2,padding:"15px",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:JOST,borderRadius:14,textTransform:"uppercase"}}
-              onClick={()=>setPendingVote(null)}
-            >CANCEL</button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-
-// ─── VENDOR DATA ─────────────────────────────────────────────────────────────
-const VENDOR_LIST = [
-  { id:"unmarked",    name:"UNMARKED",            cat:"Fashion",        logo:null,                                                                                                              icon:"🛍️", color:"#FFE500", ig:"unmarked.au",          web:"https://unmarked.au",              desc:"The brand behind the event. Street culture, car culture, and everything in between. Make a purchase at the Unmarked store.", points:[{action:"Make a purchase",pts:3}] },
-  { id:"krave",       name:"KRAVE WORLDWIDE",      cat:"Fashion",        logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-KRAVE.png?v=1784361251",                          icon:"👕", color:"#1A1A1A", ig:"kraveworldwide",        web:"https://kraveworldwide.co",        desc:"KRAVE WORLDWIDE is vice made scripture. A streetwear label built on doctrine, not trend. Indulgence worn without apology.", points:[{action:"Make a purchase",pts:3}] },
-  { id:"emptystudios",name:"EMPTY STUDIOS",        cat:"Fashion",        logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-Empty_Studio.png?v=1784361251",                  icon:"👜", color:"#222",    ig:"emptystudio.au",        web:"https://emptystudioau.com",        desc:"We create driving pieces of art from an empty blank canvas. The space you create is as important as the project itself.", points:[{action:"Make a purchase",pts:3},{action:"Have UNMARKED on your bag",pts:1}] },
-  { id:"jdmnation",   name:"JDM NATION",           cat:"Fashion",        logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-JDM_Nation.png?v=1784361250",                    icon:"🇯🇵", color:"#CC0000", ig:"jdmnation.com.au",     web:"https://jdmnation.com.au",         desc:"Australia's go-to destination for JDM culture and apparel. Celebrating everything Japanese domestic market.", points:[{action:"Make a purchase",pts:3}] },
-  { id:"incompletegl",name:"INCOMPLETEGL",          cat:"Fashion",        logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-incomplete.png?v=1784361251",                    icon:"🎮", color:"#6B2FE0", ig:"incomplete.gl",          web:"https://incompletegl.com.au",      desc:"Premium Japanese-inspired automotive accessories blending JDM culture, original Garage Spirits characters, and PS2-era aesthetics.", points:[{action:"Make a purchase",pts:3}] },
-  { id:"miloadvs",    name:"MILO MACHINES",         cat:"Fashion",        logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-Milo_Machines.png?v=1784361251",                 icon:"🐱", color:"#FF6B9D", ig:"milo.adventuress",       web:"https://miloadventuress.com",      desc:"Iconic car apparel with purrsonality. Milo Machines blends cat attitude with automotive aesthetics. Inspired by the internet's favourite car-loving cat.", points:[{action:"Make a purchase",pts:3}] },
-  { id:"pitviper",    name:"PIT VIPER AUSTRALIA",   cat:"Fashion",        logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-pit_viper.png?v=1784361251",                     icon:"🕶️", color:"#FF4500", ig:"pitviper_au",            web:"https://pitviper.au",              desc:"The Optimal Blend of Style and Performance. Eyewear and apparel that's durable, functional, and expressive.", points:[{action:"Make a purchase",pts:3},{action:"Take a selfie wearing Pit Vipers",pts:2}] },
-  { id:"riderszn",    name:"RIDERSZN",              cat:"Fashion",        logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-RiderSZN.png?v=1784361251",                      icon:"🏁", color:"#333",    ig:"riderszn",              web:"https://riderszn.com",             desc:"Street and car culture apparel for those who live the lifestyle year-round.", points:[{action:"Make a purchase",pts:3}] },
-  { id:"snowfoam",    name:"SNOW FOAM AUSTRALIA",   cat:"Car Care",       logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-snowfoam.png?v=1784361250",                      icon:"🧴", color:"#00BFFF", ig:"snowfoamaustralia",      web:"https://snowfoamaustralia.com.au", desc:"Australia's premium snow foam and car care specialists. Professional-grade products for the enthusiast who takes pride in their build.", points:[{action:"Make a purchase",pts:3}] },
-  { id:"artdeshine",  name:"ARTDESHINE",            cat:"Car Care",       logo:null,                                                                                                              icon:"✨", color:"#B06EFF", ig:"artdeshine_anz",         web:"https://artdeshine.com.au",        desc:"Since 2012, a pioneer of graphene coatings trusted by installers in over 80 countries. Premium ceramic coating research and manufacturing.", points:[{action:"Make a purchase",pts:3},{action:"Play the simulator",pts:2}] },
-  { id:"luxescents",  name:"LUXE SCENTS",           cat:"Car Care",       logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-luxe-scents.png?v=1784361250",                   icon:"🌿", color:"#FFD700", ig:"luxescents",             web:"https://luxescents.com.au",        desc:"Premium luxury-inspired car scents designed to elevate every drive. Because your car should smell as good as it looks.", points:[{action:"Make a purchase",pts:3}] },
-  { id:"scentstation",name:"SCENT STATION AU",      cat:"Car Care",       logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-scentstation.png?v=1784361251",                  icon:"🕯️", color:"#E8A87C", ig:"ScentStation_AU",        web:"https://scentstationau.com",       desc:"Premium luxury-inspired car diffusers designed to transform every drive. Inspired by the world's most iconic fragrances.", points:[{action:"Make a purchase",pts:3}] },
-  { id:"liquichem",   name:"LIQUICHEM",             cat:"Car Care",       logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-liquichem.png?v=1784361250",                     icon:"🧪", color:"#00C896", ig:"liquichem",              web:"",                                 desc:"Professional automotive chemical solutions. Specialising in car care products trusted by detailers and enthusiasts across Australia.", points:[] },
-  { id:"darlingful",  name:"DARLINGFUL",            cat:"Car Accessories",logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-Darlingful.png?v=1784361251",                    icon:"🌸", color:"#FF85C2", ig:"darlingful.au",          web:"https://darlingful.com",           desc:"A safe, welcoming space for individuals in the car & bike scene. Famous for cyber tramp stamp decals, cute accessories, car mats, and peekers.", points:[{action:"Make a purchase",pts:3}] },
-  { id:"yohyonko",    name:"YOHYONKO!",             cat:"Car Accessories",logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-yohyonko.png?v=1784361251",                      icon:"🎌", color:"#00E5CC", ig:"yohyonko",               web:"https://yohyonko.com.au",          desc:"Melbourne-based brand blending Japanese influence with car and street culture. Anime-inspired accessories and apparel.", points:[{action:"Make a purchase",pts:3}] },
-  { id:"drivedeck",   name:"DRIVEDECK",             cat:"Car Accessories",logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-drivedeck.png?v=1784361250",                     icon:"🛹", color:"#3399FF", ig:"drivedeckaus",           web:"https://drivedeck.com.au",         desc:"Premium automotive wall art transforming iconic vehicles into hand-designed display skateboard decks. Designed and manufactured in Australia.", points:[{action:"Make a purchase",pts:3}] },
-  { id:"carbonetics", name:"CARBONETICS",           cat:"Car Accessories",logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-carbonetics.png?v=1784361250",                   icon:"⚙️", color:"#666",    ig:"carboneticsau",          web:"http://carbonetics.net",           desc:"Aftermarket automotive specialist offering premium carbon fibre parts, body kits and styling upgrades for JDM, European and Korean vehicles.", points:[{action:"Make a purchase",pts:3}] },
-  { id:"ignite",      name:"IGNITE TECHNIK",        cat:"Car Accessories",logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-ignite_technik.png?v=1784361250",                icon:"🔧", color:"#FF6B00", ig:"ignitetechnik",          web:"",                                 desc:"Automotive tech specialists bringing the latest in performance and styling upgrades. Trusted by enthusiasts who demand the best.", points:[] },
-  { id:"fittings247", name:"247 FITTINGS",          cat:"Car Accessories",logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-247fittings.png?v=1784361251",                   icon:"🔩", color:"#888",    ig:"247fittings",            web:"",                                 desc:"Your 24/7 source for performance fittings, braided lines, and hardware. Quality components for builds that go the distance.", points:[] },
-  { id:"streetgear",  name:"STREET GEAR USA",       cat:"Car Accessories",logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-Street_Gear_USA.png?v=1784361251",               icon:"🇺🇸", color:"#B22222", ig:"streetgearusa",          web:"",                                 desc:"American performance and lifestyle gear for the street car scene. Bringing US car culture to Australia.", points:[] },
-  { id:"southerndc",  name:"SOUTHERN DIECAST",      cat:"Diecasts",       logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-southern-diecast.png?v=1784361251",              icon:"🚗", color:"#FF9900", ig:"southern__diecast",      web:"https://southerndiecast.net.au",   desc:"Family-owned Australian business and one of Australia's leading destinations for 1:64 scale model cars. Hot Wheels, Mini GT, INNO64 and more.", points:[{action:"Make a purchase",pts:3}] },
-  { id:"jpnbricks",   name:"JPN BRICKS",            cat:"Diecasts",       logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-jpn-bricks.png?v=1784361251",                    icon:"🧱", color:"#FF6B00", ig:"jpnbricks",              web:"https://jpnbricks.com",            desc:"Premium brick-built automotive model kits inspired by JDM, Euro, and performance cars. Detailed craftsmanship and licensed collaborations.", points:[{action:"Make a purchase",pts:3}] },
-  { id:"minirc",      name:"MINI RC",               cat:"Diecasts",       logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-mini_rc.png?v=1784361251",                       icon:"🎮", color:"#00CFFF", ig:"minirc.australia",       web:"https://minirc.com.au",            desc:"Drift mini RC cars around our table-top track. Hobby-grade professional RC drift cars. FPV experience also available — drive from the car's view in VR!", points:[{action:"Play with a Mini RC",pts:2},{action:"Make a purchase",pts:3}] },
-  { id:"diecastcult", name:"DIECAST CULTURE",       cat:"Diecasts",       logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-diecast_culture.png?v=1784361251",               icon:"🏎️", color:"#E63946", ig:"diecastculture.store",   web:"https://diecastculture.store",     desc:"Premium display mats and desktop accessories inspired by automotive culture. Realistic road markings, detailed textures, durable materials.", points:[{action:"Make a purchase",pts:3}] },
-  { id:"regaldcast",  name:"REGAL DIECASTS",        cat:"Diecasts",       logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-Regal-Diecasts.png?v=1784361250",                icon:"👑", color:"#9B59B6", ig:"regaldiecasts",          web:"https://regaldiecasts.com.au",     desc:"Specialises in premium 1:64 scale model cars, carefully curated from leading brands worldwide. Celebrating automotive culture.", points:[{action:"Make a purchase",pts:3}] },
-  { id:"pidoof",      name:"PIDOOF COLLECTIBLES",   cat:"Diecasts",       logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-pidoof.png?v=1784361251",                        icon:"🎁", color:"#FF4D6D", ig:"pidoof",                 web:"",                                 desc:"Unique collectibles and diecast models for the dedicated automotive enthusiast. Rare finds and limited editions.", points:[] },
-  { id:"karuma",      name:"KARUMA COLLECTIBLES",   cat:"Diecasts",       logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-karuma-collectibles.png?v=1784361250",           icon:"🎴", color:"#8B0000", ig:"karumacollectibles",     web:"",                                 desc:"Curated collectibles inspired by Japanese car culture. From rare diecasts to art prints — for those who appreciate the finer details.", points:[] },
-  { id:"happycap",    name:"HAPPY CAP STUDIOS",     cat:"Photography",    logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-happy-cap.png?v=1784361250",                     icon:"📸", color:"#FF85A1", ig:"happycapstudio",         web:"https://happycapstudio.com",       desc:"Self-service photo booth studio blending Korean-style booths with high-quality photography. Instant prints, digital copies, themed frames.", points:[{action:"Capture the moment",pts:3}] },
-  { id:"lumix",       name:"LUMIX",                 cat:"Photography",    logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-LUMIX.png?v=1784361250",                         icon:"📷", color:"#3399FF", ig:"lumixaustralia",         web:"https://panasonic.net/cns/sav",    desc:"Panasonic LUMIX cameras. Rent a camera for the day and shoot like a pro, or join the BODYWORK workshop with LAAG Media.", points:[{action:"Rent a camera",pts:3},{action:"Join BODYWORK Workshop",pts:3}] },
-  { id:"adc",         name:"AUSTRALIAN DRIFT CLUB", cat:"Experiences",    logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-ADC.png?v=1784361251",                           icon:"🏎️", color:"#FF4500", ig:"australiandriftclub",    web:"",                                 desc:"Australia's premier drift community. Connecting drivers, fans and culture. Come meet the ADC crew at Unmarked.", points:[] },
-  { id:"pitloon",     name:"PITLOON",               cat:"Experiences",    logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-pitloon.png?v=1784361251",                       icon:"🏁", color:"#222",    ig:"pitloon",               web:"",                                 desc:"Pitloon brings motorsport culture to the streets. Discover what's new from this unique automotive lifestyle brand.", points:[] },
-  { id:"shannons",    name:"SHANNONS INSURANCE",    cat:"Insurance",      logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-shannons.png?v=1784361252",                      icon:"🏁", color:"#FF6B00", ig:"shannonsinsurance",      web:"https://shannons.com.au",          desc:"Australia's number one motoring enthusiast insurer. Specialist insurance for classic, vintage, and enthusiast vehicles.", points:[{action:"Get a quote",pts:3},{action:"Play the racing simulator",pts:2}] },
-  { id:"wheeliebros", name:"WHEELIE BROS",          cat:"Experiences",    logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-wheeliebros.png?v=1784361251",                   icon:"🏍️", color:"#00E5CC", ig:"wheeliebros",            web:"",                                 desc:"Ride the wheelie simulator and experience what it's like to pull a perfect wheelie without the risk.", points:[{action:"Ride the wheelie simulator",pts:3}] },
-  { id:"nxtzen",      name:"NXTZEN",               cat:"Car Accessories",logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-nxtzen.png?v=1784362005",           icon:"⚡", color:"#00E5CC", ig:"nxtzen",                web:"",                                 desc:"Next level automotive accessories and lifestyle gear for the modern car enthusiast.", points:[] },
-  { id:"thelowtow",   name:"THE LOW TOW",           cat:"Experiences",    logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-thelowtow.png?v=1784362005",        icon:"🚛", color:"#FF6B00", ig:"thelowtow",              web:"",                                 desc:"The Low Tow — bringing the culture of lowered cars and towing to Unmarked. Come check them out at the show.", points:[] },
-  { id:"redbull",     name:"RED BULL",              cat:"Energy Drinks",  logo:"https://cdn.shopify.com/s/files/1/0619/3204/4438/files/vendor-RED-BULL.png?v=1784361250",                      icon:"🔴", color:"#CC0000", ig:"redbullau",              web:"https://redbull.com/au",           desc:"The Red Bull F1 car is live at Unmarked. Take your photo with it and get verified by staff to earn points and a free Red Bull.", points:[{action:"Photo with the F1 car",pts:3}] },
-];
-const VENDOR_CATS = ["All", "Fashion", "Car Care", "Car Accessories", "Diecasts", "Photography", "Insurance", "Experiences", "Energy Drinks"];
-
-// ─── FLIP CARD ────────────────────────────────────────────────────────────────
-function FlipCard({vendor}) {
-  const [flipped, setFlipped] = useState(false);
-  return (
-    <div
-      style={{perspective:"1000px", cursor:"pointer", height:220}}
-      onClick={()=>setFlipped(f=>!f)}
-    >
-      <div style={{
-        position:"relative", width:"100%", height:"100%",
-        transformStyle:"preserve-3d",
-        transition:"transform 0.5s cubic-bezier(0.4,0,0.2,1)",
-        transform: flipped ? "rotateY(180deg)" : "rotateY(0deg)",
-      }}>
-        {/* FRONT */}
-        <div style={{
-          position:"absolute", inset:0, backfaceVisibility:"hidden",
-          WebkitBackfaceVisibility:"hidden",
-          background:CARD, borderRadius:16,
-          boxShadow:SHADOW, display:"flex", flexDirection:"column",
-          justifyContent:"space-between", overflow:"hidden",
-        }}>
-          {/* Colour accent bar */}
-          <div style={{position:"absolute",top:0,left:0,right:0,height:4,background:vendor.color,borderRadius:"16px 16px 0 0",zIndex:1}}/>
-
-          {/* Instagram profile photo — top half */}
-          <div style={{position:"relative",height:110,overflow:"hidden",background:"#1C1C1E",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-            {vendor.logo
-              ? <img src={vendor.logo} alt={vendor.name} style={{width:"70%",height:"80%",objectFit:"contain",display:"block"}}/>
-              : <span style={{fontSize:36}}>{vendor.icon}</span>
-            }
-          </div>
-
-          {/* Bottom info */}
-          <div style={{padding:"10px 14px 12px",flex:1,display:"flex",flexDirection:"column",justifyContent:"space-between"}}>
-            <div style={{fontSize:13,fontWeight:800,color:TEXT1,fontFamily:JOST,letterSpacing:"-0.01em",lineHeight:1.2,marginBottom:4}}>{vendor.name}</div>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <div style={{fontSize:9,color:vendor.color,fontFamily:MONO,letterSpacing:"0.15em",fontWeight:700,textTransform:"uppercase"}}>{vendor.cat}</div>
-              <div style={{fontSize:9,color:TEXT3,fontFamily:JOST}}>tap to flip →</div>
-            </div>
-          </div>
-        </div>
-
-        {/* BACK */}
-        <div style={{
-          position:"absolute", inset:0, backfaceVisibility:"hidden",
-          WebkitBackfaceVisibility:"hidden",
-          transform:"rotateY(180deg)",
-          background:"#1C1C1E", borderRadius:16, padding:"16px",
-          boxShadow:SHADOW, display:"flex", flexDirection:"column",
-          justifyContent:"space-between", overflow:"hidden",
-        }}>
-          <div style={{position:"absolute",top:0,left:0,right:0,height:4,background:vendor.color,borderRadius:"16px 16px 0 0"}}/>
-          <div>
-            <div style={{fontSize:13,fontWeight:800,color:"#FFF",fontFamily:JOST,marginBottom:8,marginTop:4}}>{vendor.name}</div>
-            <div style={{fontSize:11,color:"rgba(255,255,255,0.6)",fontFamily:JOST,lineHeight:1.6,marginBottom:10,display:"-webkit-box",WebkitLineClamp:4,WebkitBoxOrient:"vertical",overflow:"hidden"}}>{vendor.desc}</div>
-            {/* Points */}
-            <div style={{display:"flex",flexDirection:"column",gap:4}}>
-              {vendor.points.map((p,i)=>(
-                <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",background:"rgba(255,255,255,0.05)",borderRadius:8,padding:"5px 10px"}}>
-                  <span style={{fontSize:11,color:"rgba(255,255,255,0.7)",fontFamily:JOST}}>{p.action}</span>
-                  <span style={{fontSize:13,fontWeight:800,color:ACCENT,fontFamily:JOST,flexShrink:0,marginLeft:8}}>+{p.pts}pts</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          {/* Links */}
-          <div style={{display:"flex",gap:8,marginTop:8}}>
-            {vendor.ig && (
-              <a href={`https://instagram.com/${vendor.ig}`} target="_blank" rel="noreferrer"
-                style={{flex:1,background:"rgba(255,255,255,0.08)",borderRadius:8,padding:"7px",textAlign:"center",textDecoration:"none",fontSize:10,color:"rgba(255,255,255,0.6)",fontFamily:MONO,letterSpacing:"0.1em"}}
-                onClick={e=>e.stopPropagation()}>
-                @{vendor.ig}
-              </a>
-            )}
-            {vendor.web && (
-              <a href={vendor.web} target="_blank" rel="noreferrer"
-                style={{flex:1,background:"rgba(255,255,255,0.08)",borderRadius:8,padding:"7px",textAlign:"center",textDecoration:"none",fontSize:10,color:"rgba(255,255,255,0.6)",fontFamily:MONO,letterSpacing:"0.1em"}}
-                onClick={e=>e.stopPropagation()}>
-                website →
-              </a>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ─── VENDORS TAB ──────────────────────────────────────────────────────────────
-function VendorsTab() {
-  const [activeCat, setActiveCat] = useState("All");
-  const filtered = activeCat === "All" ? VENDOR_LIST : VENDOR_LIST.filter(v=>v.cat===activeCat);
-
-  return (
-    <div style={{...S.screen, paddingBottom:120}}>
-      <TopBar title="VENDORS"/>
-
-      {/* Hero */}
-      <div style={{background:"#1C1C1E",padding:"24px 20px 20px"}}>
-        <div style={{fontSize:9,color:ACCENT,letterSpacing:"0.35em",fontFamily:MONO,marginBottom:8,textTransform:"uppercase"}}>UNMARKED VOL. V</div>
-        <div style={{fontSize:"clamp(24px,7vw,34px)",fontWeight:900,color:"#FFF",fontFamily:JOST,letterSpacing:"-0.04em",lineHeight:1,fontStyle:"italic",marginBottom:8}}>
-          MEET THE VENDORS
-        </div>
-        <div style={{fontSize:13,color:"rgba(255,255,255,0.4)",fontFamily:JOST}}>Tap a card to flip it and see points you can earn</div>
-      </div>
-
-      {/* Category filter */}
-      <div style={{padding:"14px 16px 8px",overflowX:"auto",display:"flex",gap:8,WebkitOverflowScrolling:"touch"}}>
-        {VENDOR_CATS.map(cat=>(
-          <button key={cat}
-            onClick={()=>setActiveCat(cat)}
-            style={{
-              background: activeCat===cat ? "#1C1C1E" : CARD,
-              color: activeCat===cat ? "#FFF" : TEXT2,
-              border: activeCat===cat ? "none" : `1.5px solid ${EDGE}`,
-              borderRadius:20, padding:"7px 14px", fontSize:11,
-              fontFamily:JOST, fontWeight:700, cursor:"pointer",
-              whiteSpace:"nowrap", flexShrink:0,
-              boxShadow: activeCat===cat ? "0 2px 8px rgba(0,0,0,0.15)" : "none",
-            }}
-          >{cat}</button>
-        ))}
-      </div>
-
-      {/* Cards grid */}
-      <div style={{padding:"8px 16px 0",display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-        {filtered.map(vendor=>(
-          <FlipCard key={vendor.id} vendor={vendor}/>
-        ))}
-      </div>
     </div>
   );
 }
@@ -1818,9 +1506,10 @@ export default function App() {
               setUploads(data.uploads || {});
             }
             // Restore raffle number
-        supabase.from("registrations").select("raffle_number").eq("phone", u.phone).single()
-          .then(({ data: reg }) => { if(reg?.raffle_number) setRaffleNumber(reg.raffle_number); })
-          .catch(()=>{});
+        try {
+          const { data: reg } = await supabase.from("registrations").select("raffle_number").eq("phone", u.phone).single();
+          if(reg?.raffle_number) setRaffleNumber(reg.raffle_number);
+        } catch {}
         // Also restore from localStorage backup (more reliable)
             const local = localStorage.getItem(`unmarked_progress_${uid}`);
             if(local) {
@@ -1865,26 +1554,14 @@ export default function App() {
       }
     } catch(e) { /* no existing entry, fresh start */ }
 
-    // Save registration — raffle number assigned automatically by DB trigger
+    // Save registration (upsert so repeat logins don't error)
     try {
-      const { data: existingReg } = await supabase
-        .from("registrations").select("raffle_number").eq("phone", userData.phone).maybeSingle();
-
-      if(existingReg?.raffle_number) {
-        // Already registered — restore raffle number
-        setRaffleNumber(existingReg.raffle_number);
-        await supabase.from("registrations").upsert({
-          phone: userData.phone, name: userData.name,
-          email: userData.email || null, instagram: userData.instagram || null,
-        }, { onConflict: "phone" });
-      } else {
-        // New registration — insert and get auto-assigned raffle number back
-        const { data: inserted } = await supabase.from("registrations").insert({
-          phone: userData.phone, name: userData.name,
-          email: userData.email || null, instagram: userData.instagram || null,
-        }).select("raffle_number").single();
-        if(inserted?.raffle_number) setRaffleNumber(inserted.raffle_number);
-      }
+      await supabase.from("registrations").upsert({
+        phone: userData.phone,
+        name: userData.name,
+        email: userData.email || null,
+        instagram: userData.instagram || null,
+      }, { onConflict: "phone" });
     } catch(e) { console.error("Registration save failed", e); }
   }, []);
 
@@ -2100,7 +1777,6 @@ export default function App() {
       {tab==="explore"     && <ExploreTab/>}
       {tab==="hotwheels"   && <HotWheelsTab claimed={hwClaimed} onClaim={()=>setScreen("hwpin")}/>}
       {tab==="vote"        && <VoteTab userId={userId}/>}
-      {tab==="vendors"     && <VendorsTab/>}
       <BottomNav tab={tab} setTab={setTab}/>
       {showSettings && <SettingsModal user={user} onLogout={handleLogout} onDelete={handleDeleteAccount} onClose={()=>setShowSettings(false)}/>}
     </div>
