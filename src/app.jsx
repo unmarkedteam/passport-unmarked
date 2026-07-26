@@ -1165,35 +1165,14 @@ function VoteTab({userId, userName}) {
   const [uploading, setUploading]       = useState(false);
   const [voted, setVoted]               = useState(false);
   const [voteUrl, setVoteUrl]           = useState(null);   // submitted photo URL
-  const [gallery, setGallery]           = useState([]);
-  const [loadingGallery, setLoadingGallery] = useState(true);
+
 
   useEffect(() => {
     // Check if already voted
     const savedUrl = localStorage.getItem(`unmarked_vote_photo_${userId}`);
     if(savedUrl) { setVoted(true); setVoteUrl(savedUrl); }
 
-    // Load gallery from Supabase Storage
-    loadGallery();
-    const interval = setInterval(loadGallery, 15000);
-    return () => clearInterval(interval);
   }, [userId]);
-
-  const loadGallery = async () => {
-    try {
-      const { data } = await supabase.storage.from("passport-uploads").list("votes", {
-        limit: 100, sortBy: { column: "created_at", order: "desc" }
-      });
-      if(data) {
-        const urls = data.map(f => ({
-          name: f.name,
-          url: supabase.storage.from("passport-uploads").getPublicUrl(`votes/${f.name}`).data.publicUrl
-        }));
-        setGallery(urls);
-      }
-    } catch {}
-    setLoadingGallery(false);
-  };
 
   const handleFileSelect = async (e) => {
     const file = e.target.files[0];
@@ -1225,7 +1204,6 @@ function VoteTab({userId, userName}) {
         setVoted(true);
         setVoteUrl(publicUrl);
         localStorage.setItem(`unmarked_vote_photo_${userId}`, publicUrl);
-        loadGallery();
       }
     } catch(e) { console.error("Vote upload failed", e); }
     setUploading(false);
@@ -1289,21 +1267,6 @@ function VoteTab({userId, userName}) {
         )}
       </div>
 
-      {/* Gallery */}
-      <div style={S.sectionLabel}>SUBMISSIONS — {gallery.length} PHOTOS</div>
-      {loadingGallery ? (
-        <div style={{padding:"32px",textAlign:"center",color:TEXT3,fontFamily:JOST}}>Loading photos...</div>
-      ) : gallery.length === 0 ? (
-        <div style={{padding:"32px",textAlign:"center",color:TEXT3,fontFamily:JOST,fontSize:14}}>No photos yet — be the first!</div>
-      ) : (
-        <div style={{padding:"0 16px",display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:4}}>
-          {gallery.map((img,i)=>(
-            <div key={i} style={{aspectRatio:"1",overflow:"hidden",borderRadius:8,background:EDGE}}>
-              <img src={img.url} alt="" style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -1665,7 +1628,8 @@ export default function App() {
     localStorage.removeItem("unmarked_user");
     setUser(null); setUserId(null); setStamps({}); setSolo([]);
     setDrawDone(false); setRedeemed(0); setUploads({});
-    setHwClaimed(false); setShowSettings(false);
+    setClaimedPrizes([]); setRaffleNumber(null);
+    setShowSettings(false);
     setScreen("signin");
   };
 
@@ -1700,7 +1664,7 @@ export default function App() {
     localStorage.removeItem("unmarked_user");
     setUser(null); setUserId(null); setStamps({}); setSolo([]);
     setDrawDone(false); setRedeemed(0); setUploads({});
-    setHwClaimed(false); setShowSettings(false);
+    setShowSettings(false);
     setScreen("splash");
   };
   const openVendorPin = (cat,vendor) => {
