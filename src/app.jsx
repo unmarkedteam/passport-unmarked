@@ -1109,85 +1109,93 @@ function ExploreTab() {
 
 
 // ─── VOTE TAB ────────────────────────────────────────────────────────────────
-function VoteTab({userId}) {
-  const [cars, setCars]         = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [voted, setVoted]       = useState(null);
-  const [search, setSearch]     = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [activeDay, setActiveDay]   = useState("saturday");
-  const [selectedDay, setSelectedDay] = useState("saturday");
-  const [pendingVote, setPendingVote] = useState(null); // car waiting for confirmation
+// Compress image client-side before upload
+async function compressImage(dataUrl, maxWidth=800, quality=0.65) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxWidth / img.width);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.src = dataUrl;
+  });
+}
+
+function VoteTab({userId, userName}) {
+  const [votePhoto, setVotePhoto]       = useState(null);   // dataUrl preview
+  const [uploading, setUploading]       = useState(false);
+  const [voted, setVoted]               = useState(false);
+  const [voteUrl, setVoteUrl]           = useState(null);   // submitted photo URL
+  const [gallery, setGallery]           = useState([]);
+  const [loadingGallery, setLoadingGallery] = useState(true);
 
   useEffect(() => {
-    // Load which day is active from Supabase settings
-    supabase.from("settings").select("value").eq("key","active_day").single()
-      .then(({ data }) => {
-        if(data?.value) { setActiveDay(data.value); setSelectedDay(data.value === "both" ? "saturday" : data.value); }
-      }).catch(()=>{});
-  }, []);
+    // Check if already voted
+    const savedUrl = localStorage.getItem(`unmarked_vote_photo_${userId}`);
+    if(savedUrl) { setVoted(true); setVoteUrl(savedUrl); }
 
-  const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vR-DsvOlJwWBRQZ684qtFisvrl0OWNVSZIbXoT8Ohsb0fo2T6bBxu1QWateMo5MtrPnS6VJyuRCmT83/pub?gid=876743254&single=true&output=csv";
-
-  const parseCSV = (text) => {
-    const lines = text.trim().split("\n");
-    const headers = lines[1]?.split(",").map(h => h.replace(/"/g,"").trim()) || [];
-    return lines.slice(2).map((line, i) => {
-      // Handle commas inside quoted fields
-      const cols = [];
-      let cur = "", inQ = false;
-      for(const ch of line) {
-        if(ch==='"') inQ=!inQ;
-        else if(ch==="," && !inQ) { cols.push(cur.trim()); cur=""; }
-        else cur+=ch;
-      }
-      cols.push(cur.trim());
-      const row = {};
-      headers.forEach((h,j) => row[h] = (cols[j]||"").replace(/"/g,"").trim());
-      return row;
-    }).filter(r => r["Type"]?.toLowerCase()==="car" && r["Vehicle"] && r["Matched Applicant (Raz List)"]);
-  };
-
-  useEffect(() => {
-    const saved = localStorage.getItem(`unmarked_vote_${userId}`);
-    if(saved) setVoted(saved);
-
-    supabase.from("cars").select("id,first_name,car_model,day,instagram,votes")
-      .eq("active", true).order("first_name")
-      .then(({ data }) => {
-        if(data && data.length > 0) setCars(data.map(c=>({...c,id:String(c.id)})));
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    // Load gallery from Supabase Storage
+    loadGallery();
+    const interval = setInterval(loadGallery, 15000);
+    return () => clearInterval(interval);
   }, [userId]);
 
-  const submitVote = async (car) => {
-    if(voted || submitting) return;
-    setSubmitting(true);
-    // Save vote to Supabase for tracking
+  const loadGallery = async () => {
     try {
-      await supabase.from("cars").upsert({ id: car.id, first_name: car.first_name, car_model: car.car_model, day: car.day, votes: 1 });
-      await supabase.rpc("increment_vote", { car_id: car.id }).catch(()=>{});
+      const { data } = await supabase.storage.from("passport-uploads").list("votes", {
+        limit: 100, sortBy: { column: "created_at", order: "desc" }
+      });
+      if(data) {
+        const urls = data.map(f => ({
+          name: f.name,
+          url: supabase.storage.from("passport-uploads").getPublicUrl(`votes/${f.name}`).data.publicUrl
+        }));
+        setGallery(urls);
+      }
     } catch {}
-    setVoted(car.id);
-    localStorage.setItem(`unmarked_vote_${userId}`, car.id);
-    setSubmitting(false);
+    setLoadingGallery(false);
   };
 
-  // Filter by selected day
-  // Saturday shows: Saturday + Saturday/Weekend + Weekend entries
-  // Sunday shows: Sunday + Saturday/Weekend + Weekend entries
-  const dayFiltered = cars.filter(c => {
-    const d = (c.day||"").toLowerCase();
-    if(selectedDay === "saturday") return d.includes("saturday") || d === "weekend";
-    if(selectedDay === "sunday")   return d.includes("sunday") || d === "weekend";
-    return true;
-  });
-  const filtered = dayFiltered.filter(c =>
-    `${c.first_name} ${c.car_model}`.toLowerCase().includes(search.toLowerCase())
-  );
+  const handleFileSelect = async (e) => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = async ev => {
+      const compressed = await compressImage(ev.target.result);
+      setVotePhoto(compressed);
+    };
+    reader.readAsDataURL(file);
+  };
 
-  const votedCar = cars.find(c => c.id === voted);
+  const submitVote = async () => {
+    if(!votePhoto || uploading || voted) return;
+    setUploading(true);
+    try {
+      // Convert base64 to blob
+      const base64 = votePhoto.split(",")[1];
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for(let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
+      const blob = new Blob([bytes], { type:"image/jpeg" });
+      const filename = `votes/${userId}_${Date.now()}.jpg`;
+
+      const { error } = await supabase.storage.from("passport-uploads").upload(filename, blob, { upsert:true });
+      if(!error) {
+        const { data: urlData } = supabase.storage.from("passport-uploads").getPublicUrl(filename);
+        const publicUrl = urlData.publicUrl;
+        setVoted(true);
+        setVoteUrl(publicUrl);
+        localStorage.setItem(`unmarked_vote_photo_${userId}`, publicUrl);
+        loadGallery();
+      }
+    } catch(e) { console.error("Vote upload failed", e); }
+    setUploading(false);
+  };
 
   return (
     <div style={{...S.screen, paddingBottom:120}}>
@@ -1196,133 +1204,70 @@ function VoteTab({userId}) {
       {/* Hero */}
       <div style={{background:"#1C1C1E", padding:"28px 20px 24px"}}>
         <div style={{fontSize:9,color:ACCENT,letterSpacing:"0.35em",fontFamily:MONO,marginBottom:8,textTransform:"uppercase"}}>PEOPLE'S CHOICE</div>
-        <div style={{fontSize:"clamp(28px,8vw,38px)",fontWeight:900,color:"#FFF",fontFamily:JOST,letterSpacing:"-0.04em",lineHeight:1,fontStyle:"italic",marginBottom:8}}>
+        <div style={{fontSize:"clamp(26px,7vw,36px)",fontWeight:900,color:"#FFF",fontFamily:JOST,letterSpacing:"-0.04em",lineHeight:1,fontStyle:"italic",marginBottom:8}}>
           VOTE FOR YOUR<br/>FAVOURITE CAR
         </div>
         <div style={{fontSize:13,color:"rgba(255,255,255,0.45)",fontFamily:JOST,lineHeight:1.5}}>
-          {voted
-            ? `You voted for ${votedCar?.first_name}'s ${votedCar?.car_model}. Thanks for voting!`
-            : "One vote per passport. Choose your favourite build from the show floor."}
+          Snap a photo of your favourite build on the floor. One submission per passport.
         </div>
-        {voted && (
-          <div style={{marginTop:14,background:"rgba(255,229,0,0.1)",border:"1px solid rgba(255,229,0,0.3)",borderRadius:10,padding:"10px 14px",display:"flex",alignItems:"center",gap:8}}>
-            <span style={{fontSize:16}}>🏆</span>
-            <span style={{fontSize:13,fontWeight:700,color:ACCENT,fontFamily:JOST}}>{votedCar?.first_name.toUpperCase()}'S {votedCar?.car_model.toUpperCase()}</span>
+      </div>
+
+      {/* Submit section */}
+      <div style={{padding:"16px 16px 0"}}>
+        {!voted ? (
+          <div style={{background:CARD,borderRadius:16,padding:"20px",boxShadow:SHADOW}}>
+            <div style={{fontSize:12,fontWeight:700,color:TEXT1,fontFamily:JOST,marginBottom:12,textTransform:"uppercase",letterSpacing:"0.05em"}}>
+              📸 Submit Your Photo
+            </div>
+
+            {!votePhoto ? (
+              <label style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:10,background:BG,border:`2px dashed ${EDGE}`,borderRadius:12,padding:"32px 16px",cursor:"pointer"}}>
+                <input type="file" accept="image/*" style={{display:"none"}} onChange={handleFileSelect}/>
+                <span style={{fontSize:36}}>📷</span>
+                <span style={{fontSize:14,fontWeight:700,color:TEXT1,fontFamily:JOST}}>Tap to upload photo</span>
+                <span style={{fontSize:12,color:TEXT3,fontFamily:JOST}}>Photo will be compressed automatically</span>
+              </label>
+            ) : (
+              <div>
+                <div style={{position:"relative",borderRadius:12,overflow:"hidden",marginBottom:12}}>
+                  <img src={votePhoto} alt="preview" style={{width:"100%",maxHeight:300,objectFit:"cover",display:"block"}}/>
+                  <label style={{position:"absolute",bottom:8,right:8,background:"rgba(0,0,0,0.7)",color:"#FFF",fontSize:11,fontFamily:JOST,padding:"6px 12px",borderRadius:20,cursor:"pointer"}}>
+                    <input type="file" accept="image/*" style={{display:"none"}} onChange={handleFileSelect}/>
+                    ↺ Change
+                  </label>
+                </div>
+                <button
+                  style={{width:"100%",background:uploading?EDGE:ACCENT,color:uploading?TEXT3:ACCENT_DARK,border:"none",padding:"16px",fontSize:14,fontWeight:800,letterSpacing:"0.08em",cursor:uploading?"not-allowed":"pointer",fontFamily:JOST,borderRadius:12,textTransform:"uppercase",boxShadow:uploading?"none":`0 4px 20px rgba(255,229,0,0.35)`}}
+                  onClick={submitVote}
+                  disabled={uploading}
+                >
+                  {uploading ? "UPLOADING..." : "SUBMIT MY VOTE 🏆"}
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div style={{background:"#F0FFF4",border:"1.5px solid #34C759",borderRadius:16,padding:"20px",boxShadow:SHADOW}}>
+            <div style={{fontSize:14,fontWeight:800,color:"#34C759",fontFamily:JOST,marginBottom:8}}>✓ Vote Submitted!</div>
+            {voteUrl && <img src={voteUrl} alt="your vote" style={{width:"100%",maxHeight:200,objectFit:"cover",borderRadius:10,display:"block"}}/>}
+            <div style={{fontSize:12,color:TEXT2,fontFamily:JOST,marginTop:8}}>Thanks for voting. Winner announced at end of night!</div>
           </div>
         )}
       </div>
 
-      {/* Day selector */}
-      <div style={{display:"flex",gap:8,padding:"16px 16px 8px"}}>
-        {["saturday","sunday"].map(day=>{
-          const isSelected = selectedDay === day;
-          const isLocked = day === "sunday" && activeDay === "saturday";
-          return (
-            <button key={day}
-              disabled={isLocked}
-              onClick={()=>!isLocked && setSelectedDay(day)}
-              style={{
-                flex:1, padding:"12px", borderRadius:12, border:"none",
-                fontFamily:JOST, fontWeight:800, fontSize:13, letterSpacing:"0.05em",
-                textTransform:"uppercase", cursor: isLocked ? "not-allowed" : "pointer",
-                background: isSelected ? "#1C1C1E" : CARD,
-                color: isLocked ? TEXT3 : isSelected ? "#FFF" : TEXT2,
-                boxShadow: isSelected ? "0 4px 16px rgba(0,0,0,0.15)" : SHADOW,
-                opacity: isLocked ? 0.4 : 1,
-                position:"relative",
-              }}
-            >
-              {day === "saturday" ? "Saturday 25 Jul" : "Sunday 26 Jul"}
-              {isLocked && <span style={{display:"block",fontSize:9,fontWeight:400,marginTop:2,letterSpacing:"0.1em",color:TEXT3}}>COMING SOON</span>}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Search */}
-      <div style={{padding:"0 16px 8px"}}>
-        <input
-          style={{width:"100%",background:CARD,border:`1.5px solid ${EDGE}`,color:TEXT1,padding:"12px 16px",fontSize:14,fontFamily:JOST,outline:"none",boxSizing:"border-box",borderRadius:12}}
-          placeholder="Search by name or car..."
-          value={search}
-          onChange={e=>setSearch(e.target.value)}
-        />
-      </div>
-
-      {/* Cars list */}
-      {loading ? (
-        <div style={{padding:"40px",textAlign:"center",color:TEXT3,fontFamily:JOST}}>Loading cars...</div>
+      {/* Gallery */}
+      <div style={S.sectionLabel}>SUBMISSIONS — {gallery.length} PHOTOS</div>
+      {loadingGallery ? (
+        <div style={{padding:"32px",textAlign:"center",color:TEXT3,fontFamily:JOST}}>Loading photos...</div>
+      ) : gallery.length === 0 ? (
+        <div style={{padding:"32px",textAlign:"center",color:TEXT3,fontFamily:JOST,fontSize:14}}>No photos yet — be the first!</div>
       ) : (
-        <div style={{padding:"0 16px",display:"flex",flexDirection:"column",gap:8}}>
-          {filtered.map(car=>{
-            const isVoted = voted === String(car.id);
-            return (
-              <div key={car.id}
-                style={{
-                  background: isVoted ? "#1C1C1E" : CARD,
-                  border: isVoted ? `2px solid ${ACCENT}` : `1.5px solid ${EDGE}`,
-                  borderRadius:14, padding:"16px",
-                  boxShadow: isVoted ? `0 4px 20px rgba(255,229,0,0.15)` : SHADOW,
-                  display:"flex", alignItems:"center", gap:12,
-                  opacity: voted && !isVoted ? 0.5 : 1,
-                  cursor: voted ? "default" : "pointer",
-                  transition:"all 0.2s",
-                }}
-                onClick={()=>!voted && !submitting && setPendingVote(car)}
-              >
-                <div style={{fontSize:22,flexShrink:0}}>🚗</div>
-                <div style={{flex:1,minWidth:0}}>
-                  <div style={{fontSize:15,fontWeight:800,color:isVoted?"#FFF":TEXT1,fontFamily:JOST,letterSpacing:"-0.01em",marginBottom:car.instagram?3:0}}>
-                    {car.first_name.toUpperCase()}'S {car.car_model.toUpperCase()}
-                  </div>
-                  {car.instagram && (
-                    <div style={{fontSize:11,color:isVoted?"rgba(255,255,255,0.4)":TEXT3,fontFamily:MONO,letterSpacing:"0.05em"}}>
-                      @{car.instagram}
-                    </div>
-                  )}
-                </div>
-                {isVoted ? (
-                  <div style={{background:ACCENT,color:"#000",borderRadius:20,padding:"4px 12px",fontSize:11,fontWeight:800,fontFamily:JOST,flexShrink:0}}>
-                    ✓ VOTED
-                  </div>
-                ) : !voted ? (
-                  <div style={{color:TEXT3,fontSize:20,flexShrink:0}}>›</div>
-                ) : null}
-              </div>
-            );
-          })}
-          {filtered.length === 0 && (
-            <div style={{padding:"32px",textAlign:"center",color:TEXT3,fontFamily:JOST,fontSize:14}}>No cars found</div>
-          )}
-        </div>
-      )}
-
-      {/* Confirm vote modal */}
-      {pendingVote && (
-        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.6)",zIndex:200,display:"flex",alignItems:"flex-end",justifyContent:"center"}}
-          onClick={()=>setPendingVote(null)}>
-          <div style={{background:CARD,borderRadius:"20px 20px 0 0",padding:"28px 24px 48px",width:"100%",maxWidth:500,boxShadow:"0 -8px 40px rgba(0,0,0,0.2)"}}
-            onClick={e=>e.stopPropagation()}>
-            <div style={{width:36,height:4,background:EDGE,borderRadius:2,margin:"0 auto 24px"}}/>
-            <div style={{fontSize:11,color:TEXT3,letterSpacing:"0.2em",fontFamily:MONO,marginBottom:8,textTransform:"uppercase"}}>Confirm Your Vote</div>
-            <div style={{fontSize:20,fontWeight:900,color:TEXT1,fontFamily:JOST,letterSpacing:"-0.02em",marginBottom:4,fontStyle:"italic"}}>
-              {pendingVote.first_name.toUpperCase()}'S {pendingVote.car_model.toUpperCase()}
+        <div style={{padding:"0 16px",display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:4}}>
+          {gallery.map((img,i)=>(
+            <div key={i} style={{aspectRatio:"1",overflow:"hidden",borderRadius:8,background:EDGE}}>
+              <img src={img.url} alt="" style={{width:"100%",height:"100%",objectFit:"cover",display:"block"}}/>
             </div>
-            {pendingVote.instagram && (
-              <div style={{fontSize:12,color:TEXT3,fontFamily:MONO,marginBottom:20}}>@{pendingVote.instagram}</div>
-            )}
-            <div style={{fontSize:13,color:TEXT2,fontFamily:JOST,marginBottom:24,lineHeight:1.5}}>
-              This is your one vote. You can't change it after confirming.
-            </div>
-            <button
-              style={{width:"100%",background:"#1C1C1E",color:"#FFF",border:"none",padding:"17px",fontSize:14,fontWeight:800,letterSpacing:"0.08em",cursor:"pointer",fontFamily:JOST,borderRadius:14,marginBottom:10,textTransform:"uppercase"}}
-              onClick={()=>{ submitVote(pendingVote); setPendingVote(null); }}
-            >✓ CONFIRM VOTE</button>
-            <button
-              style={{width:"100%",background:"none",border:`1.5px solid ${EDGE}`,color:TEXT2,padding:"15px",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:JOST,borderRadius:14,textTransform:"uppercase"}}
-              onClick={()=>setPendingVote(null)}
-            >CANCEL</button>
-          </div>
+          ))}
         </div>
       )}
     </div>
@@ -1819,7 +1764,7 @@ export default function App() {
       {tab==="passport"   && <PassportTab user={user} points={points} raffleNumber={raffleNumber} vendorStamps={vendorStamps} soloCompleted={soloCompleted} votes={votes} uploads={uploads} onCat={openCat} onSolo={openSoloPin} onSaveUpload={saveUpload} onSubmitDraw={()=>{setDrawDone(true);setScreen("draw");}} drawSubmitted={drawDone} onClaimPrizes={()=>setScreen("claimPrizes")} onSettings={()=>setShowSettings(true)}/>}
       {tab==="leaderboard" && <LeaderboardTab currentUser={{...user,id:userId}} currentPoints={points} leaderboard={leaderboard}/>}
       {tab==="explore"     && <ExploreTab/>}
-      {tab==="vote"        && <VoteTab userId={userId}/>}
+      {tab==="vote"        && <VoteTab userId={userId} userName={user?.name}/>}
       {tab==="vendors"     && <VendorsTab/>}
       <BottomNav tab={tab} setTab={setTab}/>
       {showSettings && <SettingsModal user={user} onLogout={handleLogout} onDelete={handleDeleteAccount} onClose={()=>setShowSettings(false)}/>}
