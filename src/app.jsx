@@ -1014,10 +1014,10 @@ const EXPLORE_ITEMS = [
     id:"redbull",
     icon:"🔴",
     tag:"RED BULL F1 ZONE",
-    title:"Red Bull F1 — Outdoor",
+    title:"Red Bull F1 Zone",
     desc:"The Red Bull F1 car live, just metres away from you. Plus a massive DJ line up including JUPITA, FAF, TOM CARROLL, SU YEN and SHTUTZ. Free Red Bull cans all night long!",
     color:"#FF0028",
-    badge:"OUTDOOR",
+    badge:"F1 ZONE",
   },
   {
     id:"shannons",
@@ -1031,9 +1031,9 @@ const EXPLORE_ITEMS = [
   {
     id:"lumix",
     icon:"📸",
-    tag:"LUMIX × LAAG MEDIA",
+    tag:"LUMIX CREATOR SESSION",
     title:"Creator Session",
-    desc:"Join the LUMIX x LAAG Media Creator Session at 1PM and 4PM. Learn how to shoot content like a pro and rent a LUMIX camera for the day.",
+    desc:"Free creator sessions by @IAMXTIAN, PMI & ZHIYUN. Fire breathing, models, lights and cars — come shoot with the best in the game.",
     color:"#3399FF",
     badge:"1PM & 4PM",
   },
@@ -1064,24 +1064,8 @@ const EXPLORE_ITEMS = [
     color:"#FFD700",
     badge:"ARCADE",
   },
-  {
-    id:"opulent",
-    icon:"💎",
-    tag:"OPULENT DETAILING",
-    title:"Live Detailing Demonstrations",
-    desc:"Watch the Opulent Detailing team work their magic in real time. These live demos break down exactly how to get a showroom-perfect finish — the products, the technique, the obsession. Pick up tips and tricks you can take home and use on your own build.",
-    color:"#B06EFF",
-    badge:"LIVE DEMO",
-  },
-  {
-    id:"staticgarage",
-    icon:"⚙️",
-    tag:"STATIC GARAGE",
-    title:"Live 3D Printing — Right in Front of You",
-    desc:"This is next level. Catch Nick and the Static Garage crew as they 3D print actual car parts on the spot. Watch raw filament become real functional components in real time — the future of car building, happening right here at Unmarked.",
-    color:"#00CFFF",
-    badge:"LIVE BUILD",
-  },
+
+
   {
     id:"carnival",
     icon:"🎯",
