@@ -130,7 +130,7 @@ const VENDOR_CATEGORIES = [
     desc:"Take a photo with the Red Bull F1 Car",
     rule:"Upload your photo then get it verified by staff", color:"#FF0028",
     vendors:[
-      { id:"redbull", name:"RED BULL — F1 CAR PHOTO", pin:"4159", points:3, action:"Take a photo with the Red Bull F1 car — upload required", hasUpload:true },
+      { id:"redbull", name:"RED BULL — F1 CAR PHOTO", pin:"4159", points:3, action:"Take a photo with the Red Bull F1 car — upload to earn 3pts instantly", hasUpload:true, autoStamp:true },
     ],
   },
 ];
@@ -706,7 +706,7 @@ function LeaderboardTab({currentUser, currentPoints, leaderboard}) {
 }
 
 // ─── CATEGORY SCREEN ──────────────────────────────────────────────────────────
-function CategoryScreen({cat, vendorStamps, vendorUploads, onSaveVendorUpload, onVendor, onBack}) {
+function CategoryScreen({cat, vendorStamps, vendorUploads, onSaveVendorUpload, onAutoStamp, onVendor, onBack}) {
   return (
     <div style={S.screen}>
       <TopBar title={cat.label.toUpperCase()} onBack={onBack}/>
@@ -746,11 +746,15 @@ function CategoryScreen({cat, vendorStamps, vendorUploads, onSaveVendorUpload, o
                           onChange={e=>{
                             const file=e.target.files[0]; if(!file) return;
                             const reader=new FileReader();
-                            reader.onload=ev=>onSaveVendorUpload(vendor.id, ev.target.result);
+                            reader.onload=ev=>{
+                              onSaveVendorUpload(vendor.id, ev.target.result);
+                              // Auto-stamp: award points instantly on upload
+                              if(vendor.autoStamp) onAutoStamp(cat, vendor);
+                            };
                             reader.readAsDataURL(file);
                           }}
                         />
-                        <span>📎  UPLOAD PHOTO</span>
+                        <span>📎  UPLOAD PHOTO — EARN {vendor.points}PTS</span>
                       </label>
                     ) : (
                       <div style={{display:"flex",flexDirection:"column",gap:10}}>
@@ -771,9 +775,11 @@ function CategoryScreen({cat, vendorStamps, vendorUploads, onSaveVendorUpload, o
                             </label>
                           </div>
                         </div>
-                        <button style={S.vStaffBtn} onClick={e=>{e.stopPropagation();onVendor(cat,vendor);}}>
-                          STAFF — VERIFY & STAMP
-                        </button>
+                        {!vendor.autoStamp && (
+                          <button style={S.vStaffBtn} onClick={e=>{e.stopPropagation();onVendor(cat,vendor);}}>
+                            STAFF — VERIFY & STAMP
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -1647,6 +1653,14 @@ export default function App() {
   // ── Navigation helpers ────────────────────────────────────────────────────
   const openCat = cat => { setActiveCat(cat); setScreen("category"); };
 
+  // Auto-stamp: instantly award points when photo is uploaded (no PIN)
+  const handleAutoStamp = (cat, vendor) => {
+    if(vendorStamps[vendor.id]) return; // already stamped
+    setStamps(s => ({...s, [vendor.id]: {pts: vendor.points, at: Date.now()}}));
+    setLast({label: vendor.name, icon: "🔴", earnedPts: vendor.points});
+    setScreen("success");
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("unmarked_user");
     setUser(null); setUserId(null); setStamps({}); setSolo([]);
@@ -1799,7 +1813,7 @@ export default function App() {
     </div>
   );
 
-  if(screen==="category")    return <CategoryScreen cat={activeCat} vendorStamps={vendorStamps} onVendor={openVendorPin} onBack={()=>setScreen("main")}/>;
+  if(screen==="category")    return <CategoryScreen cat={activeCat} vendorStamps={vendorStamps} vendorUploads={uploads} onSaveVendorUpload={saveUpload} onAutoStamp={handleAutoStamp} onVendor={openVendorPin} onBack={()=>setScreen("main")}/>;
   if(screen==="pin")         return <PinScreen label={activePin.label} icon={activePin.icon} pin={activePin.pin} hasvote={activePin.hasvote} onSuccess={pinSuccess} onBack={()=>setScreen(activeCat&&activePin?.type==="vendor"?"category":"main")}/>;
   if(screen==="success")     return <SuccessScreen label={lastSuccess.label} icon={lastSuccess.icon} earnedPts={lastSuccess.earnedPts} totalPoints={points} onContinue={()=>setScreen(activeCat&&activePin?.type==="vendor"?"category":"main")}/>;
   if(screen==="claimPrizes") return <ClaimPrizesScreen points={points} claimedPrizes={claimedPrizes} onSuccess={claimSuccess} onBack={()=>setScreen("main")}/>;
