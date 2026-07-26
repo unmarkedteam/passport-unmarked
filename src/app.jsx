@@ -1057,24 +1057,16 @@ const EXPLORE_ITEMS = [
   },
   {
     id:"arcade",
-    icon:"🎮",
-    tag:"UNMARKED ARCADE",
-    title:"Daytona USA Racing",
-    desc:"Step up and race on the classic Daytona USA arcade machine. Challenge your mates and see who's fastest on the track.",
+    icon:"🥊",
+    tag:"UNMARKED PUNCHING BAG",
+    title:"Score the Highest — Win at End of Night",
+    desc:"Step up, throw your hardest and put your score on the board. The highest score at end of night takes home an award. Think you've got what it takes?",
     color:"#FFD700",
-    badge:"ARCADE",
+    badge:"CHALLENGE",
   },
 
 
-  {
-    id:"carnival",
-    icon:"🎯",
-    tag:"CARNIVAL GAMES",
-    title:"Test Your Luck",
-    desc:"Take a shot at the carnival games and see what you're made of. Win prizes and have a laugh with your crew.",
-    color:"#FF4D6D",
-    badge:"GAMES",
-  },
+
   {
     id:"happycap",
     icon:"🎩",
