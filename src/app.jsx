@@ -1838,10 +1838,7 @@ export default function App() {
   if(screen==="pin")         return <PinScreen label={activePin.label} icon={activePin.icon} pin={activePin.pin} hasvote={activePin.hasvote} onSuccess={pinSuccess} onBack={()=>setScreen(activeCat&&activePin?.type==="vendor"?"category":"main")}/>;
   if(screen==="success")     return <SuccessScreen label={lastSuccess.label} icon={lastSuccess.icon} earnedPts={lastSuccess.earnedPts} totalPoints={points} onContinue={()=>setScreen(activeCat&&activePin?.type==="vendor"?"category":"main")}/>;
   if(screen==="claimPrizes") return <ClaimPrizesScreen points={points} claimedPrizes={claimedPrizes} onSuccess={claimSuccess} onBack={()=>setScreen("main")}/>;
-  if(screen==="prizeClaimed"){
-    const prize = getPrize(rawPoints - redeemedPts + (currentPrize?.pts||0) - (currentPrize?.pts||0));
-    return <PrizeClaimedScreen prize={currentPrize} remainingPoints={points - (currentPrize?.pts||0)} onContinue={()=>setScreen("main")}/>;
-  }
+  if(screen==="prizeClaimed") return <PrizeClaimedScreen prize={currentPrize} remainingPoints={points - (currentPrize?.pts||0)} onContinue={()=>setScreen("main")}/>;
   if(screen==="draw")        return <DrawScreen user={user} points={points} onBack={()=>setScreen("main")}/>;
   return null;
 }
