@@ -854,7 +854,21 @@ function PinScreen({label, icon, pin:correctPin, hasvote, onSuccess, onBack}) {
         {["1","2","3","4","5","6","7","8","9","","0","⌫"].map((k,i)=>(
           <button key={i} disabled={k===""||!voteReady}
             style={{...S.numKey,...(k===""?S.numBlank:{})}}
-            onClick={()=>k==="⌫"?setPin(p=>p.slice(0,-1)):k!==""?digit(k):null}
+            onPointerDown={e=>{
+              if(k===""||!voteReady) return;
+              e.currentTarget.style.transform="scale(0.93)";
+              e.currentTarget.style.background="#E8E6DF";
+              if(k==="⌫") setPin(p=>p.slice(0,-1));
+              else digit(k);
+            }}
+            onPointerUp={e=>{
+              e.currentTarget.style.transform="scale(1)";
+              e.currentTarget.style.background="#FFFFFF";
+            }}
+            onPointerLeave={e=>{
+              e.currentTarget.style.transform="scale(1)";
+              e.currentTarget.style.background="#FFFFFF";
+            }}
           >{k}</button>
         ))}
       </div>
@@ -936,7 +950,21 @@ function ClaimPrizesScreen({points, claimedPrizes=[], onSuccess, onBack}) {
         {["1","2","3","4","5","6","7","8","9","","0","⌫"].map((k,i)=>(
           <button key={i} disabled={k===""}
             style={{...S.numKey,...(k===""?S.numBlank:{})}}
-            onClick={()=>k==="⌫"?setPin(p=>p.slice(0,-1)):k!==""?digit(k):null}
+            onPointerDown={e=>{
+              if(k==="") return;
+              e.currentTarget.style.transform="scale(0.93)";
+              e.currentTarget.style.background="#E8E6DF";
+              if(k==="⌫") setPin(p=>p.slice(0,-1));
+              else digit(k);
+            }}
+            onPointerUp={e=>{
+              e.currentTarget.style.transform="scale(1)";
+              e.currentTarget.style.background="#FFFFFF";
+            }}
+            onPointerLeave={e=>{
+              e.currentTarget.style.transform="scale(1)";
+              e.currentTarget.style.background="#FFFFFF";
+            }}
           >{k}</button>
         ))}
       </div>
@@ -2001,7 +2029,7 @@ const S = {
   dotFilled:{background:TEXT1,borderColor:TEXT1,transform:"scale(1.15)"},
   numpad:{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:3,padding:"0 20px",maxWidth:340,margin:"0 auto"},
   numpadOff:{opacity:0.3,pointerEvents:"none"},
-  numKey:{background:CARD,border:`1px solid ${EDGE}`,color:TEXT1,fontSize:24,padding:"20px 0",cursor:"pointer",fontFamily:JOST,fontWeight:600,borderRadius:12,boxShadow:"0 1px 4px rgba(0,0,0,0.06)"},
+  numKey:{background:CARD,border:`1px solid ${EDGE}`,color:TEXT1,fontSize:26,padding:"18px 0",cursor:"pointer",fontFamily:JOST,fontWeight:600,borderRadius:12,boxShadow:"0 1px 4px rgba(0,0,0,0.06)",WebkitTapHighlightColor:"transparent",touchAction:"manipulation",userSelect:"none",WebkitUserSelect:"none",transition:"transform 0.05s, background 0.05s"},
   numBlank:{background:"transparent",border:"none",cursor:"default",boxShadow:"none"},
 
   // ── Claim prizes ──────────────────────────────────────────────────────────
